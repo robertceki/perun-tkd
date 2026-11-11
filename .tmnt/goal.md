@@ -1,0 +1,2 @@
+# APP-S3
+Roll call opens 60 elapsed minutes before the scheduled start, inclusive. Server time governs all writes. Use Europe/Belgrade calendar time and UTC instants, including midnight and daylight saving changes. Complete roll call and add substitutes in the same window. Preserve actual-start cancellation, past editing, cancelled locks, access control and audit. Preserve earlier task attempts and outstanding findings. No production deployment or remote database mutation without authorization.
