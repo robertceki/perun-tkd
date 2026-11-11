@@ -1,0 +1,8 @@
+{
+  "revision": "APP-S3",
+  "status": "approved",
+  "scope": "Open roll call 60 minutes before scheduled start, inclusive, in UI and database. Completion and substitutes included. Preserve cancellation at actual start, past edits, authorization, audit and existing task history.",
+  "approvalEvidence": "User: Treba odbriti prozivku za termin 60min pre pocetka termina",
+  "developmentProjectRef": "kajvevswejtmejnmiodl",
+  "clubTimezone": "Europe/Belgrade"
+}

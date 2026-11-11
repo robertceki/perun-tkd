@@ -1,0 +1,68 @@
+{
+  "id": "A2",
+  "role": "donatello",
+  "specRevision": "APP-S2",
+  "title": "Add dated attendance sessions, server locks, audit and enrollment cancellation",
+  "status": "awaiting_review",
+  "retryUsed": 1,
+  "lastAttempt": {
+    "requestId": "A2-correction-20261111",
+    "requestHash": "5c15b40883bff4b4c7235d7a1fb696ce3b46e884c7351efaef281b2275bce52d",
+    "task": "A2",
+    "role": "donatello",
+    "phase": "correction",
+    "state": "returned",
+    "time": "2026-11-11T09:43:53.492Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\A2-donatello-IH4wVv\\response.md"
+  },
+  "blockedBy": [],
+  "readFiles": [
+    "AGENTS.md",
+    ".tmnt/goal.md",
+    ".tmnt/goal.json",
+    "src/domain/types.ts",
+    "src/domain/validation.ts",
+    "src/lib/repository.ts",
+    "src/lib/auth.ts",
+    "src/lib/supabase.ts",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "allowedFiles": [
+    "src/domain/types.ts",
+    "src/domain/validation.ts",
+    "src/lib/repository.ts",
+    "docs/attendance-setup.md",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql"
+  ],
+  "reviewFiles": [
+    "package.json",
+    "package-lock.json",
+    ".eslintrc.cjs",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "tests/setup.ts",
+    "tsconfig.json",
+    "src/lib/supabase.ts",
+    "src/lib/auth.ts",
+    "docs/phase1-setup.md",
+    "supabase/migrations/20261110111023_phase1_foundation.sql",
+    "src/domain/types.ts",
+    "src/domain/validation.ts",
+    "src/lib/repository.ts",
+    "docs/attendance-setup.md",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql"
+  ],
+  "dod": [
+    "Existing phase-one types and repository APIs remain backward compatible; new session/attendance/enrollment APIs follow the agreed contract.",
+    "Additive reviewed migration implements immutable per-date schedule and roster snapshots, boolean presence defaulting false, completion, substitute additions and cancellation without destroying history.",
+    "Server-authoritative Europe/Belgrade start time prevents presence changes, substitute additions and roll-call completion before the session begins. Past sessions remain editable; cancelled sessions reject attendance mutations.",
+    "Creator/editor identities and timestamps are set by trusted database logic from the authenticated user, not accepted as client authorization or audit claims.",
+    "Enrollment cancellation uses cancelled_at and preserves historical enrollment. Explicit APP-S2 cancellation behavior is additive approved work; D1 remains unchanged in identity and exhausted retry accounting.",
+    "All new exposed tables and RPCs enforce active-trainer authorization, reject anonymous/non-trainer access and prevent audit/self-authorization bypasses.",
+    "npm run typecheck, npm run lint and npm run build pass; document exact RPC parameters, server rules, migration and rollback-test procedure.",
+    "No worker remote migration application, account creation, emails, secret/environment edits, Git mutation, commit, push or deployment."
+  ],
+  "manualCriteria": [],
+  "qaFinding": "Raphael confirmed pre-start session materialization and device-local business date bugs in final A2 initial source"
+}
