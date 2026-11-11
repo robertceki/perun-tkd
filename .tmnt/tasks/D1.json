@@ -1,0 +1,83 @@
+{
+  "id": "D1",
+  "role": "donatello",
+  "specRevision": "PHASE1-S1",
+  "status": "blocked",
+  "retryUsed": 1,
+  "lastAttempt": {
+    "requestId": "D1-correction-20261110",
+    "requestHash": "8bef6252b7cffb13ba9dd717d7dd9ed59a4d073700ace7197e1b7bcff3a10f5b",
+    "task": "D1",
+    "role": "donatello",
+    "phase": "correction",
+    "state": "returned",
+    "time": "2026-11-10T11:52:28.772Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\D1-donatello-qOlusD\\response.md"
+  },
+  "title": "Phase-one tooling, typed domain, authorized Supabase repository and schema",
+  "readFiles": [
+    "AGENTS.md",
+    ".tmnt/goal.md",
+    ".tmnt/goal.json",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "tsconfig.node.json",
+    "vite.config.ts",
+    "src/lib/supabase.ts"
+  ],
+  "allowedFiles": [
+    "package.json",
+    "package-lock.json",
+    ".eslintrc.cjs",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "tests/setup.ts",
+    "tsconfig.json",
+    "src/domain/types.ts",
+    "src/domain/validation.ts",
+    "src/lib/supabase.ts",
+    "src/lib/auth.ts",
+    "src/lib/repository.ts",
+    "docs/phase1-setup.md",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "reviewFiles": [
+    "package.json",
+    "package-lock.json",
+    ".eslintrc.cjs",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "tests/setup.ts",
+    "tsconfig.json",
+    "src/domain/types.ts",
+    "src/domain/validation.ts",
+    "src/lib/supabase.ts",
+    "src/lib/auth.ts",
+    "src/lib/repository.ts",
+    "docs/phase1-setup.md",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "dod": [
+    "Type checking and lint pass for D1 source and configurations; existing build is not regressed.",
+    "Package manifest defines pinned Bootstrap 5.3.8, installed Supabase 2.117.3 and compatible testing tools without unnecessary React or Vite upgrades. Parent may install dependencies and synchronize the lockfile after worker changes.",
+    "Snake-case domain types export Trainer, Contact, Child, ChildContact, Group, WeeklyTerm, TermAssignment and ClubData according to the agreed interface.",
+    "Repository exports createClubRepository(client) and a nullable repository singleton, providing load, saveContact, saveGroup, saveChild and saveTerm. Aggregate child/contact and term/assignment writes are atomic and preserve historical assignments.",
+    "Auth exports loadAuthorizedSession, signInTrainer, signOutTrainer, requestPasswordReset, updatePassword and subscribeToAuthChanges. Unauthorized or inactive trainers cannot access application data. Missing configuration does not crash module loading.",
+    "Migration artifact defines trainer-controlled access, enables RLS on exposed tables, prevents anonymous and authenticated non-trainer access and prevents client self-elevation. Any membership helper avoids recursive policies and uses restricted privileges and a locked search path.",
+    "Migration enforces main versus competition group eligibility, valid dates/times, required primary contact consistency and eligible nonduplicate assignments.",
+    "No remote database application, real trainer provisioning, account creation, email sending, environment modification, workflow-state modification, Git mutation, commit or push is performed by the worker.",
+    "Setup documentation describes parent installation, migration review/application and later trainer provisioning, and accurately reports that real-trainer login remains deferred."
+  ],
+  "manualCriteria": [],
+  "notes": [
+    "Parent applies reviewed SQL only to confirmed development project kajvevswejtmejnmiodl.",
+    "Real trainer provisioning is explicitly deferred by the user; do not grant membership to an existing account.",
+    "Contact phone is required; email and address may be null. Child birth_date is required; address and belt can remain empty during initial onboarding.",
+    "Worker may leave dependency installation to the parent rather than fail or weaken permissions for network access."
+  ],
+  "qaFinding": "Raphael: new/extended assignment accepts inactive group; reproduce validateTerm errors=[]; SQL lacks group.active check",
+  "blockedReason": "partial; live development DB checks passed; future assignment cancellation needs explicit design/further correction decision; retry1 exhausted",
+  "checkpoint": ".tmnt/runs/PHASE1-status.md"
+}

@@ -1,0 +1,56 @@
+{
+  "status": "awaiting_review",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "M3-open-window-20261111",
+    "requestHash": "099b6e9a92ad54c18cc9cff22ab27263db302f5192c9a788d14450e80b4c30a1",
+    "task": "M3",
+    "role": "michelangelo",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-11T10:59:48.736Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\M3-michelangelo-NHme7e\\response.md"
+  },
+  "dod": [
+    "Server-calibrated UI opens roll call at inclusive start minus 60 minutes, updates while open, and handles Belgrade DST correctly.",
+    "Before opening render clear notice and no write controls. Cancel becomes available at actual start. Keep past edits, cancelled lock and separate clock failure."
+  ],
+  "readFiles": [
+    "supabase/migrations/20261111110000_attendance_open_one_hour_early.sql",
+    "src/App.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/attendance.test.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "supabase/tests/attendance_rls.sql",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql",
+    "src/domain/validation.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json"
+  ],
+  "manualCriteria": [],
+  "reviewFiles": [
+    "supabase/migrations/20261111110000_attendance_open_one_hour_early.sql",
+    "src/App.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/attendance.test.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "supabase/tests/attendance_rls.sql",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql",
+    "src/domain/validation.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json"
+  ],
+  "allowedFiles": [
+    "src/App.tsx",
+    "src/components/AttendancePage.tsx"
+  ],
+  "specRevision": "APP-S3",
+  "title": "Server-calibrated UI opens roll call at inclusive start minus 60 minutes, updates while open, and handles Belgrade DST correctly.",
+  "role": "michelangelo",
+  "id": "M3"
+}
