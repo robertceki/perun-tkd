@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
-import type { TrainingSession, SessionAttendance } from '../../src/domain/types'
+import type { TrainingSession, SessionAttendance, Child, WeightCategory } from '../../src/domain/types'
 
 export { expect }
 export const today = '2026-07-06'
@@ -24,8 +24,8 @@ export function sessionId(termId: string, date: string) {
 const now = '2026-07-06T16:30:00Z'
 const trainer = { id: fixtureIds.trainer, user_id: fixtureIds.user, full_name: 'Synthetic Trainer', active: true }
 const actor = { created_by: trainer.id, updated_by: trainer.id, created_at: now, updated_at: now }
-const child = (id: string, first_name: string) => ({ id, first_name, last_name: 'Test', birth_date: '2015-01-01',
-  status: 'active', main_group_id: fixtureIds.group, competition_group_id: null, address: '', belt: '' })
+const child = (id: string, first_name: string): Child => ({ id, first_name, last_name: 'Test', birth_date: '2015-01-01',
+  sex: null, member_type: 'recreational', status: 'active', main_group_id: fixtureIds.group, competition_group_id: null, address: '', belt: '' })
 const term = (id: string, starts_at: string, weekday = 1) => ({ id, starts_at, weekday, ends_at: '21:00:00',
   group_id: fixtureIds.group, trainer_id: trainer.id, active: true, valid_from: '2026-01-01', valid_to: null })
 
@@ -54,7 +54,7 @@ export const test = base.extend<{
     const attendance: SessionAttendance[] = []
     const terms = [term(fixtureIds.future, '20:00:00'), term(fixtureIds.started, '18:00:00'), term(fixtureIds.early, '17:00:00'), term(fixtureIds.other, '16:00:00', 2)]
     if (boundaryTerm) terms[1] = term(fixtureIds.started, boundaryTerm.time, boundaryTerm.weekday)
-    const children = [
+    const children: Child[] = [
       { ...child(fixtureIds.ana, 'Ana'), medical_exam_date: anaMedicalExamDate },
       { ...child(fixtureIds.iva, 'Iva'), medical_exam_date: null },
     ]
@@ -62,7 +62,12 @@ export const test = base.extend<{
     const assignments = [{ term_id: fixtureIds.started, child_id: fixtureIds.ana, valid_from: '2026-01-01', valid_to: null, cancelled_at: null as string | null }]
     const groups = [{ id: fixtureIds.group, name: 'Pioniri', kind: 'main', active: true }]
     const contacts = [{ id: fixtureIds.parent, first_name: 'Mira', last_name: 'Test', phone: '000', email: null, address: null }]
-    const tables = { trainers: [trainer], groups, contacts, children, child_contacts: links, weekly_terms: terms,
+    const weightCategories: WeightCategory[] = [
+      { id: 'older_pioneers:F:-27', age_category: 'older_pioneers', sex: 'F', signed_kg: -27, sort_order: 1 },
+      { id: 'cadets:F:-29', age_category: 'cadets', sex: 'F', signed_kg: -29, sort_order: 1 },
+      { id: 'cadets:M:-33', age_category: 'cadets', sex: 'M', signed_kg: -33, sort_order: 1 },
+    ]
+    const tables = { weight_categories: weightCategories, competition_classes: [{ id: 'A' }, { id: 'B' }], trainers: [trainer], groups, contacts, children, child_contacts: links, weekly_terms: terms,
       term_assignments: assignments, training_sessions: sessions, session_attendance: attendance }
     const user = { id: trainer.user_id, aud: 'authenticated', role: 'authenticated', email: 'trainer@example.invalid',
       app_metadata: {}, user_metadata: {}, created_at: now }

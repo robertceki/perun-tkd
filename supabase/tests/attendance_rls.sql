@@ -78,7 +78,7 @@ begin
   insert into public.groups(id,name,kind) values (grp,'R1 original group','main'),(other_grp,'R1 other group','main');
   insert into public.contacts(id,first_name,last_name,phone) values (parent_id,'R1','Parent','000');
   kid_data := jsonb_build_object('id',kid,'first_name','Original','last_name','Child','birth_date','2015-01-01',
-    'status','active','main_group_id',grp,'address','','belt','');
+    'status','active','main_group_id',grp,'address','','belt','','sex','F','member_type','recreational');
   perform public.save_child(kid_data,jsonb_build_array(jsonb_build_object(
     'child_id',kid,'contact_id',parent_id,'relationship','parent','is_primary',true)));
   perform public.save_child(kid_data || jsonb_build_object('id',substitute,'first_name','Substitute'),

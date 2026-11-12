@@ -1,0 +1,72 @@
+{
+  "id": "CP1",
+  "role": "donatello",
+  "title": "Competitor profile donatello",
+  "specRevision": "COMPETITOR-PROFILE",
+  "status": "awaiting_review",
+  "retryUsed": 1,
+  "lastAttempt": {
+    "requestId": "CP1-competitor-profile-correction",
+    "requestHash": "ba8756a93ae6b533d8ace4a2d6fa52134688c45313c26e4db157b92bc9ed86a8",
+    "task": "CP1",
+    "role": "donatello",
+    "phase": "correction",
+    "state": "returned",
+    "time": "2026-11-12T16:21:17.750Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\CP1-donatello-jFLY9y\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112110000_competitor_profile.sql",
+    "src/domain/types.ts",
+    "src/lib/repository.ts",
+    "src/domain/competitorProfile.ts",
+    "src/domain/validation.ts",
+    "src/components/ChildrenPage.tsx",
+    "src/components/CompetitorProfile.tsx",
+    "src/components/TermsPage.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/competitorProfile.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "supabase/tests/competitor_profile_rls.sql",
+    "src/App.tsx",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "supabase/migrations/20261111110000_attendance_open_one_hour_early.sql",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql"
+  ],
+  "allowedFiles": [
+    "supabase/migrations/20261112110000_competitor_profile.sql",
+    "src/domain/types.ts",
+    "src/lib/repository.ts"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112110000_competitor_profile.sql",
+    "src/domain/types.ts",
+    "src/lib/repository.ts",
+    "src/domain/competitorProfile.ts",
+    "src/domain/validation.ts",
+    "src/components/ChildrenPage.tsx",
+    "src/components/CompetitorProfile.tsx",
+    "src/components/TermsPage.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/competitorProfile.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "supabase/tests/competitor_profile_rls.sql",
+    "src/App.tsx",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "supabase/migrations/20261111110000_attendance_open_one_hour_early.sql",
+    "supabase/migrations/20261110165932_attendance_app_s2.sql"
+  ],
+  "dod": [
+    "Implement SQL additive migration, types, and repo loading for fixed catalogs; use optional properties for legacy fixtures. Shared contract: children sex nullable 'M'|'F', member_type not null 'recreational'|'competitor' default recreational, competition_class nullable 'A'|'B', weight_category_id nullable text FK. Read-only public.weight_categories with id text, age_category text, sex text, signed_kg integer, sort_order integer. public.competition_classes with id text A/B. Age codes rev_pioneers (6–7), younger_pioneers (8–9), older_pioneers (10–11), cadets (12–14), juniors (15–17), seniors (18+); Belgrade year minus birth year. ID can be stable age:sex:signed_kg. Weights M/F both: REV and younger [-19,-21,-23,-25,-27,-29,-31,-33,-36,-39,-43,43]; older [-27,-30,-33,-36,-40,-44,-48,-52,-57,57]; cadets M [-33,-37,-41,-45,-49,-53,-57,-61,-65,65], F [-29,-33,-37,-41,-44,-47,-51,-55,-59,59]; juniors M [-45,-48,-51,-55,-59,-63,-68,-73,-78,78], F [-42,-44,-46,-49,-52,-55,-59,-63,-68,68]; seniors M [-54,-58,-63,-68,-74,-80,-87,87], F [-46,-49,-53,-57,-62,-67,-73,73]. Preserve children notes/medical, save_child atomic contacts and permissions; omitted keys preserve on update. Require sex and explicit member type on new application saves (database enforce sex on insert, member_type default recreational for compatibility); no inferred sex for existing. Existing all recreational, preserve existing competition group even when changed unrelated fields, prohibit adding/replacing competition group for recreational. Disallow weight/class on recreational. Allow an unchanged stale weight after automatic year rollover to preserve unrelated saves, but require a valid matching sex/age on changed selection or profile sex/birth changes. Retain current check_child safeguards, and adjust existing check_assignment function to block new/extended competitive enrollments for recreational while allowing unchanged, closing and cancelling legacy rows. Also update existing attendance check_attendance to block NEW substitutes on competitive sessions unless competitor, while existing snapshots/check-ins preserved; no changes to timing rules. Fixed catalogs RLS active trainer read only; no remote calls, Git, credentials. End DONE."
+  ],
+  "manualCriteria": []
+}

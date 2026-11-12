@@ -1,6 +1,6 @@
 {
-  "revision": "MEDICAL-EXAM",
+  "revision": "COMPETITOR-PROFILE",
   "status": "approved",
-  "scope": "Optional child medical exam date, 6 calendar month validity, 14 day warning, list and attendance indicators",
-  "approvalEvidence": "User approved the medical exam implementation plan: go"
+  "scope": "Sex, recreational/competitor profile, auto age by Belgrade year, fixed optional weight and class, preserve legacy groups and enrollment",
+  "approvalEvidence": "User approved plan with all current children marked recreational: go"
 }
