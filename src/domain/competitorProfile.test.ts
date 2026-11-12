@@ -49,7 +49,8 @@ describe('competitor profiles', () => {
   })
 })
 it('permits optional competitor details and preserves a legacy competition group', () => {
-  expect(validateChild(legacy, links, data, today)).toEqual([])
+  expect(validateChild(legacy, links, data, today)).toContain('Izaberite pol deteta.')
+  expect(validateChild({ ...legacy, sex: 'F' }, links, data, today)).toEqual([])
   expect(validateChild({ ...competitor, competition_class: null, weight_category_id: null }, links, data, today)).toEqual([])
   expect(validateChild(legacy, links, { ...data, children: [] }, today)).toContain('Takmičarska grupa zahteva takmičara.')
 })

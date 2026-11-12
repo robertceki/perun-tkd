@@ -152,6 +152,11 @@ test('medical exam date rejects future input, persists, filters, and clears', as
   expect(writes()).toEqual([])
 
   await date.fill('2026-01-20')
+  const sex = page.getByLabel('Pol', { exact: true })
+  await expect(sex).toHaveAttribute('required', '')
+  await save.click()
+  expect(writes()).toEqual([])
+  await sex.selectOption('F')
   await save.click()
   await expect(date).toBeHidden()
   await page.reload()
