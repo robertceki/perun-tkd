@@ -37,6 +37,53 @@ test('settings keeps core forms and reuses the existing sibling contact', async 
   await expect(page.getByText(/odgovorni trener|created_by|updated_by/i)).toHaveCount(0)
 })
 
+test('child notes preserve multiple lines after reload and can be cleared', async ({ page, calls }) => {
+  const button = (name: string) => page.getByRole('button', { name, exact: true })
+  const label = (name: string) => page.getByLabel(name, { exact: true })
+  const openChildren = async () => {
+    await button('Podešavanja').click()
+    await button('Deca').click()
+  }
+  const edit = button('Uredi dete Lana Test')
+  const notes = label('Napomene')
+  const multiline = 'Poneti opremu.\nKontaktirati roditelja posle treninga.'
+  const save = async () => {
+    await button('Sačuvaj').click()
+    await expect(notes).toBeHidden()
+  }
+
+  await login(page)
+  await openChildren()
+  await button('Dodaj dete').click()
+  await label('Ime deteta').fill('Lana')
+  await label('Prezime deteta').fill('Test')
+  await label('Datum rođenja').fill('2016-01-01')
+  await label('Glavna grupa').selectOption(fixtureIds.group)
+  await button('Poveži postojeći kontakt').click()
+  await label('Kontakt 1').selectOption(fixtureIds.parent)
+  await label('Odnos kontakta 1 sa detetom').fill('majka')
+  await expect(notes).toHaveValue('')
+  await save()
+
+  await edit.click()
+  await expect(notes).toHaveValue('')
+  await notes.fill(multiline)
+  await save()
+  await page.reload()
+  await openChildren()
+  await edit.click()
+  await expect(notes).toHaveValue(multiline)
+
+  await notes.fill('')
+  await save()
+  await page.reload()
+  await openChildren()
+  await edit.click()
+  await expect(notes).toHaveValue('')
+  expect(calls.filter(call => call.name === 'save_child').map(call => call.args.p_child))
+    .toEqual([null, multiline, null].map(value => expect.objectContaining({ notes: value })))
+})
+
 test('mocked login survives a browser reload', async ({ page, calls }) => {
   await login(page)
   await page.reload()

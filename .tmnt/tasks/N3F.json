@@ -1,0 +1,49 @@
+{
+  "id": "N3F",
+  "role": "raphael",
+  "title": "Child notes on feature branch",
+  "specRevision": "CHILD-NOTES",
+  "status": "blocked",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "N3F-child-notes-feature-20261112",
+    "requestHash": "80179d429135aac15ed083c5569c71b1802099b7d4f1d21396515f49097bd7fc",
+    "task": "N3F",
+    "role": "raphael",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-12T10:22:44.864Z",
+    "status": "blocked: scope",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\N3F-raphael-NEhGN8\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "allowedFiles": [
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "dod": [
+    "Add one targeted child notes browser test, use existing mock, create without note then edit multiline, reload/reopen, clear and verify after reopen. Run typecheck lint build unit and browser tests. Use synthetic VITE_SUPABASE_URL=https://tkd-r1.invalid and publishable key sb_publishable_synthetic_r1, CHROME_LOG_FILE absolute in dist, output dist and alternate port via transient dist config if needed. No production files or external mutations. End DONE."
+  ],
+  "manualCriteria": []
+}

@@ -1,7 +1,7 @@
 export interface Trainer { id: string; user_id: string; full_name: string; active: boolean }
 export interface Group { id: string; name: string; kind: 'main' | 'competition'; active: boolean }
 export interface Contact { id: string; first_name: string; last_name: string; phone: string; email: string | null; address: string | null }
-export interface Child { id: string; first_name: string; last_name: string; birth_date: string; address: string; belt: string; status: 'active' | 'inactive'; main_group_id: string; competition_group_id: string | null }
+export interface Child { id: string; first_name: string; last_name: string; birth_date: string; address: string; belt: string; status: 'active' | 'inactive'; main_group_id: string; competition_group_id: string | null; notes?: string | null }
 export interface ChildContact { child_id: string; contact_id: string; relationship: string; is_primary: boolean }
 export interface WeeklyTerm { id: string; group_id: string; weekday: number; starts_at: string; ends_at: string; trainer_id: string; valid_from: string; valid_to: string | null; active: boolean; created_by?: string | null; updated_by?: string | null; created_at?: string | null; updated_at?: string | null }
 export interface TermAssignment { term_id: string; child_id: string; valid_from: string; valid_to: string | null; cancelled_at?: string | null }

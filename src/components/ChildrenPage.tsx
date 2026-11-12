@@ -17,7 +17,7 @@ export function ChildrenPage({ data, club, navigate }: { data: ClubData; club: C
   const ready = data.groups.some(g => g.active && g.kind === 'main') && data.contacts.length > 0
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!draft) return
-    const value = { ...draft, first_name: draft.first_name.trim(), last_name: draft.last_name.trim(), address: draft.address.trim(), belt: draft.belt.trim() }
+    const value = { ...draft, first_name: draft.first_name.trim(), last_name: draft.last_name.trim(), address: draft.address.trim(), belt: draft.belt.trim(), notes: draft.notes?.trim() ? draft.notes : null }
     const invalid = validateChild(value, links, data); setErrors(invalid)
     if (!invalid.length && await club.saveChild(value, links) === 'saved') setDraft(null)
   }
@@ -30,6 +30,10 @@ export function ChildrenPage({ data, club, navigate }: { data: ClubData; club: C
       <Field label="Datum rođenja" type="date" required value={draft.birth_date} onChange={e => setDraft({ ...draft, birth_date: e.target.value })} />
       <Field label="Adresa (opciono pri upisu)" autoComplete="street-address" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
       <Field label="Pojas (opciono pri upisu)" value={draft.belt} onChange={e => setDraft({ ...draft, belt: e.target.value })} />
+      <div className="mb-3">
+        <label className="form-label" htmlFor="child-notes">Napomene</label>
+        <textarea className="form-control" id="child-notes" rows={3} value={draft.notes ?? ''} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
+      </div>
       <SelectField label="Status deteta" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Child['status'] })}><option value="active">Aktivno</option><option value="inactive">Neaktivno</option></SelectField>
       <SelectField label="Glavna grupa" required value={draft.main_group_id} onChange={e => setDraft({ ...draft, main_group_id: e.target.value })}><option value="">Izaberite glavnu grupu</option>{data.groups.filter(g => g.kind === 'main' && (g.active || g.id === previous?.main_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>
       <SelectField label="Takmičarska grupa (opciono)" value={draft.competition_group_id ?? ''} onChange={e => setDraft({ ...draft, competition_group_id: e.target.value || null })}><option value="">Bez takmičarske grupe</option>{data.groups.filter(g => g.kind === 'competition' && (g.active || g.id === previous?.competition_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>

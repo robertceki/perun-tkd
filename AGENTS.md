@@ -1,6 +1,7 @@
 # TKD Perun — Codex workflow
 
 ## Scope and authorization
+- For each new feature, create its feature/<name> branch from develop before starting any feature work.
 - This repository is the only project root. Resolve paths from this file; never use another project's paths or memory.
 - Codex only. Preserve existing application files, Git history, local changes and environment configuration. Never print credentials or read environment values merely for orientation.
 - No application/database import from another project. Commit, push, branch changes, deployments and database mutations require explicit authorization covering that action.
