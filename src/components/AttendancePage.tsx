@@ -1,3 +1,4 @@
+import { allowsCompetitionEnrollment } from '../domain/competitorProfile'
 import { useEffect, useRef, useState } from 'react'
 import { getMedicalExamDetails } from '../domain/medicalExam'
 import { MedicalExamStatus } from './MedicalExamStatus'
@@ -37,7 +38,8 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     return child && <MedicalExamStatus details={getMedicalExamDetails(child.medical_exam_date, today)} warningsOnly />
   }
   const present = rows.filter(row => row.present).length
-  const options = data.children.filter(child => child.status === 'active' && !rows.some(row => row.child_id === child.id))
+  const sessionGroup = data.groups.find(group => group.id === session?.group_id)
+  const options = data.children.filter(child => child.status === 'active' && allowsCompetitionEnrollment(child, sessionGroup) && !rows.some(row => row.child_id === child.id))
   const preview = !session && !canStart ? data.children.filter(child => data.assignments.some(entry =>
     entry.term_id === term.termId && entry.child_id === child.id && entry.valid_from <= term.date &&
     (!entry.valid_to || entry.valid_to >= term.date) &&

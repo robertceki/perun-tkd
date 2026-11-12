@@ -5,7 +5,7 @@ import { validateChild } from './validation'
 test('only a live enrollment blocks moving or deactivating a child', () => {
   const child: Child = {
     id: '00000000-0000-4000-8000-000000000001', first_name: 'Ana', last_name: 'Test',
-    birth_date: '2015-02-01', address: '', belt: '', status: 'active',
+    birth_date: '2015-02-01', sex: 'F', address: '', belt: '', status: 'active',
     main_group_id: 'original', competition_group_id: null,
   }
   const assignment: TermAssignment = { term_id: 'term', child_id: child.id, valid_from: '2099-01-01', valid_to: null }

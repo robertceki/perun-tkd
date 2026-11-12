@@ -1,3 +1,4 @@
+import { allowsCompetitionEnrollment } from '../domain/competitorProfile'
 import { useState, type FormEvent } from 'react'
 import type { ClubData, TermAssignment, WeeklyTerm } from '../domain/types'
 import { enrollmentPeriodsOverlap, formatTime, validateTerm } from '../domain/validation'
@@ -21,7 +22,8 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
     const invalid = validateTerm(draft, assignments, data); setErrors(invalid)
     if (!invalid.length && await club.saveTerm(draft, assignments) === 'saved') setDraft(null)
   }
-  const eligible = data.children.filter(c => c.status === 'active' && (c.main_group_id === draft?.group_id || c.competition_group_id === draft?.group_id))
+  const draftGroup = data.groups.find(group => group.id === draft?.group_id)
+  const eligible = data.children.filter(c => c.status === 'active' && allowsCompetitionEnrollment(c, draftGroup) && (c.main_group_id === draft?.group_id || c.competition_group_id === draft?.group_id))
   const enrollmentReady = !!draft && draft.active && data.groups.some(g => g.id === draft.group_id && g.active) && (!draft.trainer_id || data.trainers.some(t => t.id === draft.trainer_id && t.active))
   return <><h1 className="h3">Nedeljni termini</h1><p>Lokacija kluba nije podešena</p><p>Datumi uključuju oba kraja perioda. Za novi raspored povezanog termina napravite novi termin; istorijski upisi ostaju nepromenjeni.</p>
     {!ready && <div className="alert alert-info">Za novi termin potrebni su aktivna grupa i potvrđen serverski datum. <button type="button" className="btn btn-link" onClick={() => navigate('Grupe')}>Otvori grupe</button></div>}
@@ -62,7 +64,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
             {!old && <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setAssignments(assignments.filter((_, i) => i !== index))}>Ukloni nesačuvani upis {index + 1}</button>}
           </div>
         })}
-        {!eligible.length && <p>U grupi nema aktivne dece. <button type="button" className="btn btn-link" onClick={() => navigate('Deca')}>Otvori decu</button></p>}
+        {!eligible.length && <p>U grupi nema dece koja ispunjavaju uslove za upis. <button type="button" className="btn btn-link" onClick={() => navigate('Deca')}>Otvori decu</button></p>}
         {!enrollmentReady && <p>Novi ili produženi upisi zahtevaju aktivan termin, grupu i trenera.</p>}
         <button type="button" className="btn btn-outline-primary" disabled={!eligible.length || !enrollmentReady} onClick={() => setAssignments([...assignments, { term_id: draft.id, child_id: '', valid_from: draft.valid_from > today ? draft.valid_from : today, valid_to: draft.valid_to }])}>Dodaj upis</button>
       </fieldset><FormActions busy={club.busy} cancel={() => setDraft(null)} />
