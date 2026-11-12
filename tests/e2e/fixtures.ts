@@ -37,22 +37,27 @@ const belgrade = new Intl.DateTimeFormat('sv-SE', {
 export const test = base.extend<{
   calls: Call[]
   initialTime: string
+  anaMedicalExamDate: string | null
   boundaryTerm: { time: string; weekday: number } | null
   serverClock: { instant: string }
 }>({
   initialTime: [now, { option: true }],
+  anaMedicalExamDate: [null, { option: true }],
   boundaryTerm: [null, { option: true }],
   serverClock: async ({ initialTime }, use) => { await use({ instant: initialTime }) },
   serviceWorkers: 'block',
   timezoneId: 'Pacific/Honolulu',
-  calls: async ({ page, context, baseURL, initialTime, boundaryTerm, serverClock }, use) => {
+  calls: async ({ page, context, baseURL, initialTime, anaMedicalExamDate, boundaryTerm, serverClock }, use) => {
     const calls: Call[] = []
     const unexpected: string[] = []
     const sessions: TrainingSession[] = []
     const attendance: SessionAttendance[] = []
     const terms = [term(fixtureIds.future, '20:00:00'), term(fixtureIds.started, '18:00:00'), term(fixtureIds.early, '17:00:00'), term(fixtureIds.other, '16:00:00', 2)]
     if (boundaryTerm) terms[1] = term(fixtureIds.started, boundaryTerm.time, boundaryTerm.weekday)
-    const children = [child(fixtureIds.ana, 'Ana'), child(fixtureIds.iva, 'Iva')]
+    const children = [
+      { ...child(fixtureIds.ana, 'Ana'), medical_exam_date: anaMedicalExamDate },
+      { ...child(fixtureIds.iva, 'Iva'), medical_exam_date: null },
+    ]
     const links = [{ child_id: fixtureIds.ana, contact_id: fixtureIds.parent, relationship: 'majka', is_primary: true }]
     const assignments = [{ term_id: fixtureIds.started, child_id: fixtureIds.ana, valid_from: '2026-01-01', valid_to: null, cancelled_at: null as string | null }]
     const groups = [{ id: fixtureIds.group, name: 'Pioniri', kind: 'main', active: true }]

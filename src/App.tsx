@@ -158,7 +158,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
     {data && <>
       {selected && activeTerm && <AttendancePage key={selected.date + '/' + selected.termId} term={activeTerm}
         data={data} club={club} opening={activeTerm.startsAt - rollCallLeadTime}
-        serverInstant={clock.instant} authBusy={authBusy}
+        serverInstant={clock.instant} today={clock.error ? '' : today} authBusy={authBusy}
         verifyBoundary={clock.verifyBoundary} back={() => setSelected(null)} />}
       {selected && !activeTerm && <p role="alert">Termin više nije dostupan. <button type="button" className="btn btn-link" onClick={() => setSelected(null)}>Nazad na termine</button></p>}
       <div hidden={page !== 'Početna' || !!selected}>

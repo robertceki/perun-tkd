@@ -1,6 +1,6 @@
 {
-  "revision": "CHILD-NOTES",
+  "revision": "MEDICAL-EXAM",
   "status": "approved",
-  "scope": "Optional multiline Napomene on child add/edit, including save, reopen, clear and compatibility.",
-  "approvalEvidence": "User: Treba svakom detteu da dodamo jedno tekstualno polje Napomene"
+  "scope": "Optional child medical exam date, 6 calendar month validity, 14 day warning, list and attendance indicators",
+  "approvalEvidence": "User approved the medical exam implementation plan: go"
 }
