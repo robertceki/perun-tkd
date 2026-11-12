@@ -104,7 +104,7 @@ for (const scenario of [
       await page.getByLabel(/^(?:Izaberite |Izabrani )?datum$/i).filter({ visible: true }).fill(scenario.date)
       await openTime(main, scenario.time.slice(0, 5)).click()
       await expect(main.getByText(`Prozivka se otvara u ${scenario.local} (${scenario.openingDate}).`)).toBeVisible()
-      await expect(main.getByText('Ana Test', { exact: true }).filter({ visible: true })).toBeVisible()
+      await expect(main.getByRole('listitem').filter({ hasText: 'Ana Test' })).toBeVisible()
       await expect(main.getByRole('checkbox')).toHaveCount(0)
       expect(calls.filter(call => call.name !== 'get_server_time')).toEqual([])
 
@@ -136,5 +136,54 @@ test.describe('after opening and before start', () => {
     await expect(main.getByRole('button', { name: 'Otkaži trening' })).toHaveCount(0)
     expect(calls.filter(call => call.name !== 'get_server_time').map(call => call.name))
       .toEqual(['ensure_session', 'set_presence', 'add_substitute', 'complete_session'])
+  })
+})
+
+test.describe('attendance with an expired medical exam', () => {
+  test.use({ anaMedicalExamDate: '2026-01-05' })
+
+  test('shows the warning and still records presence and completes the session', async ({ page, calls }) => {
+    await login(page)
+    const main = page.getByRole('main')
+    await openTime(main, '18:00').click()
+    const roster = main.getByRole('group', { name: 'Spisak prisustva' })
+    await expect(roster.getByText('Lekarski pregled je istekao', { exact: true })).toBeVisible()
+    const presence = roster.getByRole('checkbox', { name: 'Ana Test', exact: true })
+    await presence.check()
+    await expect(presence).toBeChecked()
+
+    const substitute = main.getByRole('combobox', { name: /zamen/i })
+    await substitute.selectOption({ label: 'Iva Test' })
+    await main.getByRole('button', { name: /Dodaj zamenu/i }).click()
+    await expect(roster.getByRole('checkbox', { name: /Iva Test/i })).toBeEnabled()
+    await expect(roster.getByText('Lekarski pregled nije unet', { exact: true })).toBeVisible()
+
+    await main.getByRole('button', { name: /Završi (prozivku|trening)/i }).click()
+    await expect(main.getByText('Prozivka je završena.', { exact: true })).toBeVisible()
+    const id = sessionId(fixtureIds.started, today)
+    await expect.poll(() => calls.filter(call => call.name === 'complete_session')).toEqual([
+      { name: 'complete_session', args: { p_session_id: id } },
+    ])
+    expect(calls.filter(call => call.name === 'set_presence')).toEqual([
+      { name: 'set_presence', args: { p_session_id: id, p_child_id: fixtureIds.ana, p_present: true } },
+    ])
+  })
+})
+
+test.describe('attendance with a medical exam expiring tomorrow', () => {
+  test.use({ anaMedicalExamDate: '2026-01-07' })
+
+  test('shows the exact remaining day and allows recording presence', async ({ page, calls }) => {
+    await login(page)
+    const main = page.getByRole('main')
+    await openTime(main, '18:00').click()
+    const roster = main.getByRole('group', { name: 'Spisak prisustva' })
+    await expect(roster.getByText('Lekarski pregled ističe za 1 dan', { exact: true })).toBeVisible()
+    const presence = roster.getByRole('checkbox', { name: 'Ana Test', exact: true })
+    await presence.check()
+    await expect(presence).toBeChecked()
+    await expect.poll(() => calls.filter(call => call.name === 'set_presence')).toEqual([
+      { name: 'set_presence', args: { p_session_id: sessionId(fixtureIds.started, today), p_child_id: fixtureIds.ana, p_present: true } },
+    ])
   })
 })

@@ -1,0 +1,62 @@
+{
+  "id": "ME1",
+  "role": "donatello",
+  "title": "Medical exam donatello",
+  "specRevision": "MEDICAL-EXAM",
+  "status": "awaiting_review",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "ME1-medical-exam-20261112",
+    "requestHash": "3901b8264a102e1145f453b33bd633d36e101f602c96d319b1bc026cab26d0c2",
+    "task": "ME1",
+    "role": "donatello",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-12T10:39:35.762Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\ME1-donatello-fbojOU\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "allowedFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "dod": [
+    "Add nullable medical_exam_date date, preserve notes migration's save_child body and grants, omitted key preserves on update, null clears; explicit INSERT columns. Add insert/update-of-medical_exam_date trigger with fixed search_path, invoker, rejecting nonfinite and future relative to Europe/Belgrade. Keep RLS, contact atomicity and grants; no remote mutation. End DONE."
+  ],
+  "manualCriteria": []
+}

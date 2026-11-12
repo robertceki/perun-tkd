@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { getMedicalExamDetails } from '../domain/medicalExam'
+import { MedicalExamStatus } from './MedicalExamStatus'
 import { formatTime } from '../domain/validation'
 import type { ClubData } from '../domain/types'
 import type { ClubController } from '../hooks/useClubData'
@@ -13,9 +15,9 @@ const openingDate = new Intl.DateTimeFormat('sr-Latn-RS', {
   timeZone: 'Europe/Belgrade', dateStyle: 'short',
 })
 
-export function AttendancePage({ term, data, club, opening, serverInstant, authBusy, verifyBoundary, back }: {
+export function AttendancePage({ term, data, club, opening, serverInstant, today, authBusy, verifyBoundary, back }: {
   term: DatedTerm; data: ClubData; club: ClubController; opening: number
-  serverInstant: number | undefined; authBusy: boolean
+  serverInstant: number | undefined; today: string; authBusy: boolean
   verifyBoundary: (boundary: number) => Promise<boolean | null>; back: () => void
 }) {
   const heading = useRef<HTMLHeadingElement>(null)
@@ -29,6 +31,11 @@ export function AttendancePage({ term, data, club, opening, serverInstant, authB
   const canStart = !authBusy && serverInstant !== undefined && serverInstant >= opening
   const canCancel = serverInstant !== undefined && serverInstant >= term.startsAt
   const rows = (data.attendance ?? []).filter(row => row.session_id === session?.id)
+  const childrenById = new Map(data.children.map(child => [child.id, child]))
+  function examWarning(childId: string) {
+    const child = childrenById.get(childId)
+    return child && <MedicalExamStatus details={getMedicalExamDetails(child.medical_exam_date, today)} warningsOnly />
+  }
   const present = rows.filter(row => row.present).length
   const options = data.children.filter(child => child.status === 'active' && !rows.some(row => row.child_id === child.id))
   const preview = !session && !canStart ? data.children.filter(child => data.assignments.some(entry =>
@@ -85,7 +92,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, authB
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
       <h2 className="h5">Planirani spisak</h2>
-      {preview.length ? <ul>{preview.map(child => <li key={child.id}>{child.first_name} {child.last_name}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
+      {preview.length ? <ul>{preview.map(child => <li key={child.id}>{child.first_name} {child.last_name}{examWarning(child.id)}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
     </section>}
     {session && <>
       {session.cancelled_at && <p role="status">Trening je otkazan. Spisak je dostupan samo za pregled.</p>}
@@ -95,13 +102,13 @@ export function AttendancePage({ term, data, club, opening, serverInstant, authB
         <legend className="h5">Spisak prisustva</legend>
         {!rows.length && <p role="status">Na spisku nema dece.</p>}
         {!canStart && rows.length > 0 && <ul>{rows.map(row => <li key={row.child_id}>
-          {row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''} · {row.present ? 'Prisutan' : 'Odsutan'}
+          {row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''}{examWarning(row.child_id)} · {row.present ? 'Prisutan' : 'Odsutan'}
         </li>)}</ul>}
-        {canStart && rows.map(row => <Check key={row.child_id}
+        {canStart && rows.map(row => <div key={row.child_id} className="d-flex align-items-baseline flex-wrap"><Check
           label={row.child_first_name + ' ' + row.child_last_name + (row.is_substitute ? ' (zamena)' : '')}
           checked={presenceDraft?.childId === row.child_id && !session.cancelled_at ? presenceDraft.value : row.present}
           disabled={!!presenceDraft && presenceDraft.childId !== row.child_id}
-          onChange={event => void savePresence(row.child_id, event.currentTarget.checked)} />)}
+          onChange={event => void savePresence(row.child_id, event.currentTarget.checked)} />{examWarning(row.child_id)}</div>)}
         {presenceDraft && !session.cancelled_at && <div className="mb-3">
           <p role="status">{checking || busy ? 'Provera i čuvanje prisustva…' : 'Izmena prisustva još nije potvrđena. Broj prisutnih prikazuje učitano stanje.'}</p>
           {canStart && !checking && !busy && <>

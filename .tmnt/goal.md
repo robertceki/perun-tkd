@@ -1,3 +1,3 @@
-# Child notes
+# Medical exam
 
-Optional multiline Napomene on child add/edit, including save, reopen, clear and compatibility.
+Optional child medical exam date, 6 calendar month validity, 14 day warning, list and attendance indicators

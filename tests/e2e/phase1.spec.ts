@@ -122,3 +122,71 @@ test('an existing enrollment blocks a duplicate for the same period', async ({ p
     expect.objectContaining({ child_id: fixtureIds.ana, valid_from: '2099-01-02' }),
   ]))
 })
+
+test('medical exam date rejects future input, persists, filters, and clears', async ({ page, calls }) => {
+  const button = (name: string) => page.getByRole('button', { name, exact: true })
+  const openChildren = async () => {
+    await button('Podešavanja').click()
+    await button('Deca').click()
+  }
+  const date = page.getByLabel('Datum lekarskog pregleda', { exact: true })
+  const edit = button('Uredi dete Ana Test')
+  const clear = button('Obriši datum lekarskog pregleda')
+  const save = button('Sačuvaj')
+  const filter = page.getByLabel('Filter lekarskog pregleda', { exact: true })
+  const writes = () => calls.filter(call => call.name === 'save_child').map(call => call.args.p_child)
+
+  await login(page)
+  await openChildren()
+  await edit.click()
+  await expect(date).toHaveValue('')
+  await expect(date).toHaveAttribute('max', '2026-07-06')
+  await date.fill('2026-07-07')
+  await save.click()
+  await expect(date).toBeVisible()
+  expect(await date.evaluate((input: HTMLInputElement) => input.validity.rangeOverflow)).toBe(true)
+  expect(writes()).toEqual([])
+
+  await date.fill('2026-01-20')
+  await save.click()
+  await expect(date).toBeHidden()
+  await page.reload()
+  await openChildren()
+  await expect(button('Uredi dete Iva Test')).toBeVisible()
+  await filter.selectOption({ label: 'Ističe uskoro ili je istekao' })
+  await expect(edit).toBeVisible()
+  await expect(page.getByText('Lekarski pregled ističe za 14 dana', { exact: true })).toBeVisible()
+  await expect(button('Uredi dete Iva Test')).toHaveCount(0)
+
+  await edit.click()
+  await expect(date).toHaveValue('2026-01-20')
+  await clear.click()
+  await expect(date).toHaveValue('')
+  await save.click()
+  await expect(edit).toHaveCount(0)
+  await expect(page.getByRole('status').filter({ hasText: 'Nema dece koja odgovaraju izabranim filterima.' })).toBeVisible()
+  await page.reload()
+  await openChildren()
+  await edit.click()
+  await expect(date).toHaveValue('')
+  expect(writes()).toEqual(['2026-01-20', null].map(value => expect.objectContaining({
+    id: fixtureIds.ana, medical_exam_date: value,
+  })))
+})
+
+for (const [examDate, warning] of [
+  ['2026-01-05', 'Lekarski pregled je istekao 05.07.2026.'],
+  ['2026-01-21', 'Lekarski pregled važi do 21.07.2026.'],
+] as const) {
+  test.describe(`children with an exam on ${examDate}`, () => {
+    test.use({ anaMedicalExamDate: examDate })
+
+    test('shows the exact expiry date', async ({ page, calls }) => {
+      await login(page)
+      await page.getByRole('button', { name: 'Podešavanja', exact: true }).click()
+      await page.getByRole('button', { name: 'Deca', exact: true }).click()
+      await expect(page.getByText(warning, { exact: true })).toBeVisible()
+      expect(calls.filter(call => call.name === 'save_child')).toEqual([])
+    })
+  })
+}

@@ -1,0 +1,68 @@
+{
+  "id": "ME2",
+  "role": "michelangelo",
+  "title": "Medical exam michelangelo",
+  "specRevision": "MEDICAL-EXAM",
+  "status": "awaiting_review",
+  "retryUsed": 1,
+  "lastAttempt": {
+    "requestId": "ME2-medical-exam-copy-correction",
+    "requestHash": "568a761a1baf62dfb9508c6c05b86b2f5900183cdb534fd76bc809c5cbe4dcde",
+    "task": "ME2",
+    "role": "michelangelo",
+    "phase": "correction",
+    "state": "returned",
+    "time": "2026-11-12T10:47:17.005Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\ME2-michelangelo-N4vBtL\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "allowedFiles": [
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "dod": [
+    "Implement optional medical_exam_date?: string|null. Child add/edit optional Datum lekarskog pregleda date with clear and max server Belgrade today, manual validation before save, no device clock fallback, preserve draft. Extract pure date arithmetic status helper: six calendar months with EOM clamp, expiry inclusive, 14 days inclusive warning, today, expired, missing; use UTC calendar arithmetic and supplied server business date. All text+color statuses next to name in child table and combined Ističe uskoro ili je istekao filter. Attendance next to names including substitutes show warning/missing only from latest child by ID, no attendance gate; pass existing confirmed server Belgrade today via props; unavailable clock must not guess status. Keep notes and existing flows. Run typecheck/lint/unit. End DONE."
+  ],
+  "manualCriteria": []
+}
