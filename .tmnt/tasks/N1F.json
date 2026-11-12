@@ -1,0 +1,48 @@
+{
+  "id": "N1F",
+  "role": "donatello",
+  "title": "Child notes on feature branch",
+  "specRevision": "CHILD-NOTES",
+  "status": "awaiting_review",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "N1F-child-notes-feature-20261112",
+    "requestHash": "d7b0977f04aa582869aa33945a8d5df1a35631fe1b3125c44402c2ce4fd4b434",
+    "task": "N1F",
+    "role": "donatello",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-12T10:21:28.468Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\N1F-donatello-NqYNHg\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "allowedFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "dod": [
+    "Add nullable text notes to children via new migration. Explicit CREATE OR REPLACE save_child from original with exact metadata and grants preserved, explicit INSERT columns, update notes only when p_child contains notes, omitted means preserve on edit and null on insert, explicit null or whitespace-only clears; preserve multiline text otherwise. Keep authorization, atomic contacts, locks. Do not apply remote migrations. End DONE."
+  ],
+  "manualCriteria": []
+}
