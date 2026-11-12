@@ -1,0 +1,65 @@
+{
+  "id": "ME3",
+  "role": "raphael",
+  "title": "Medical exam raphael",
+  "specRevision": "MEDICAL-EXAM",
+  "status": "blocked",
+  "retryUsed": 1,
+  "lastAttempt": {
+    "requestId": "ME3-medical-exam-copy-regression",
+    "requestHash": "9fde1f40cdc415715dae4eaf5ce7e9f6ab982bd95bbd5391e62b0da7c5a1888a",
+    "task": "ME3",
+    "role": "raphael",
+    "phase": "correction",
+    "state": "returned",
+    "time": "2026-11-12T10:48:15.542Z",
+    "status": "blocked: scope",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\ME3-raphael-4vMRIS\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "allowedFiles": [
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112100000_child_medical_exam.sql",
+    "src/App.tsx",
+    "src/domain/types.ts",
+    "src/domain/medicalExam.ts",
+    "src/components/MedicalExamStatus.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/domain/medicalExam.test.ts",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261112090000_child_notes.sql"
+  ],
+  "dod": [
+    "Add exact behavior regressions for end of month, leap year, 15/14/0/-1 day, missing date; desktop/mobile browser check input save/reopen/clear, future rejection, filter, attendance warning and nonblocking checks with synthetic mocks. No production code edits. Run typecheck lint build unit and browser tests using synthetic URL https://tkd-r1.invalid and sb_publishable_synthetic_r1 key, output and CHROME_LOG_FILE absolute under dist, alternate port via dist transient config if needed. No secrets, Git or remote calls. End DONE."
+  ],
+  "manualCriteria": []
+}
