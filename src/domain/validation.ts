@@ -52,7 +52,7 @@ export function validateChild(child: Child, links: ChildContact[], data: ClubDat
   if (!date(child.birth_date) || child.birth_date > (today || belgradeBusinessDate())) errors.push('Datum rođenja mora biti ispravan i ne može biti u budućnosti.')
   if (!['active', 'inactive'].includes(child.status)) errors.push('Neispravan status deteta.')
   const previous = data.children.find(item => item.id === child.id)
-  if ((!previous || child.sex != null) && child.sex !== 'M' && child.sex !== 'F') errors.push('Izaberite pol deteta.')
+  if (child.sex !== 'M' && child.sex !== 'F') errors.push('Izaberite pol deteta.')
   if ((!previous || child.member_type !== undefined) && child.member_type !== 'recreational' && child.member_type !== 'competitor') errors.push('Izaberite tip člana.')
   if (child.member_type !== 'competitor') {
     if (child.competition_group_id && (previous?.member_type === 'competitor' || child.competition_group_id !== previous?.competition_group_id)) errors.push('Takmičarska grupa zahteva takmičara.')

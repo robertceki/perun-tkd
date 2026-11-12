@@ -38,7 +38,7 @@ export function CompetitorProfile({ child, previous, data, today, change, openSc
 
   return <>
     <Field label="Datum rođenja" type="date" required value={child.birth_date} onChange={e => updateWeightInputs({ ...child, birth_date: e.target.value })} />
-    <SelectField label="Pol" required={!previous} value={child.sex ?? ''} onChange={e => updateWeightInputs({ ...child, sex: (e.target.value || null) as Child['sex'] })}>
+    <SelectField label="Pol" autoComplete="sex" required value={child.sex ?? ''} onChange={e => updateWeightInputs({ ...child, sex: (e.target.value || null) as Child['sex'] })}>
       <option value="">Izaberite pol</option><option value="M">Muški</option><option value="F">Ženski</option>
     </SelectField>
     <SelectField label="Tip člana" required value={child.member_type ?? ''} onChange={e => changeType(e.target.value as MemberType)}>
