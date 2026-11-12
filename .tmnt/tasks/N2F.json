@@ -1,0 +1,49 @@
+{
+  "id": "N2F",
+  "role": "michelangelo",
+  "title": "Child notes on feature branch",
+  "specRevision": "CHILD-NOTES",
+  "status": "awaiting_review",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "N2F-child-notes-feature-20261112",
+    "requestHash": "5ec7ea67ca7bfe71f6985e794d809f156f396bb07323ac3da02c92640a027fbe",
+    "task": "N2F",
+    "role": "michelangelo",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-12T10:22:09.492Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\N2F-michelangelo-5MB0lv\\response.md"
+  },
+  "readFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "allowedFiles": [
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx"
+  ],
+  "reviewFiles": [
+    "supabase/migrations/20261112090000_child_notes.sql",
+    "src/domain/types.ts",
+    "src/components/ChildrenPage.tsx",
+    "tests/e2e/phase1.spec.ts",
+    "tests/e2e/fixtures.ts",
+    "src/lib/repository.ts",
+    "playwright.config.ts",
+    "package.json",
+    "supabase/migrations/20261110111023_phase1_foundation.sql"
+  ],
+  "dod": [
+    "Implement optional child notes in allowed files. Use notes?: string | null for mixed-schema/legacy data. Add accessible labelled Bootstrap textarea Napomene in add/edit child form, use value draft.notes ?? '', preserve multiline and send null for whitespace-only; nonblank retain original content. Notes editable/readable within child details only. Save, clear, preserve on failure. Do not edit tests, DB, Git or deploy. End DONE."
+  ],
+  "manualCriteria": []
+}
