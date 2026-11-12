@@ -21,7 +21,7 @@ export function SettingsPage({ tab, select, data, club, navigate, today }: {
       {tabs.map(({ id, label }) => <button key={id} type="button" className={'nav-link' + (tab === id ? ' active' : '')}
         aria-current={tab === id ? 'page' : undefined} onClick={() => select(id)}>{label}</button>)}
     </nav>
-    <div hidden={tab !== 'Deca'}><ChildrenPage data={data} club={club} navigate={navigate} today={today} /></div>
+    <div hidden={tab !== 'Deca'}><ChildrenPage data={data} club={club} navigate={navigate} today={today} openSchedule={() => select('Raspored')} /></div>
     <div hidden={tab !== 'Kontakti'}><ContactsPage data={data} club={club} /></div>
     <div hidden={tab !== 'Grupe'}><GroupsPage data={data} club={club} /></div>
     <div hidden={tab !== 'Raspored'}><TermsPage data={data} club={club} navigate={navigate} today={today} /></div>

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Child, ChildContact, ClubData, Contact, Group, TermAssignment, TrainingSession, SessionAttendance, WeeklyTerm } from '../domain/types'
+import type { Child, ChildContact, ClubData, CompetitionClass, Contact, Group, TermAssignment, TrainingSession, SessionAttendance, WeightCategory, WeeklyTerm } from '../domain/types'
 import { validateContact, validateGroup } from '../domain/validation'
 import { supabase } from './supabase'
 
@@ -24,12 +24,13 @@ export function createClubRepository(client: SupabaseClient) {
   }
   return {
     async load(): Promise<ClubData> {
-      const [trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance] = await Promise.all([
+      const [trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses] = await Promise.all([
         rows<ClubData['trainers'][number]>('trainers', 'id'), rows<Group>('groups', 'id'), rows<Contact>('contacts', 'id'), rows<Child>('children', 'id'),
         rows<ChildContact>('child_contacts', 'child_id,contact_id'), rows<WeeklyTerm>('weekly_terms', 'id'), rows<TermAssignment>('term_assignments', 'term_id,child_id,valid_from'),
         rows<TrainingSession>('training_sessions', 'id'), rows<SessionAttendance>('session_attendance', 'session_id,child_id'),
+        rows<WeightCategory>('weight_categories', 'age_category,sex,sort_order,id'), rows<CompetitionClass>('competition_classes', 'id'),
       ])
-      return { trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance }
+      return { trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses }
     },
     async ensureSession(sessionDate: string, termId: string): Promise<TrainingSession> {
       return await rpc('ensure_session', { p_session_date: sessionDate, p_term_id: termId }) as TrainingSession

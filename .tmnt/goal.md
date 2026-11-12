@@ -1,3 +1,3 @@
-# Medical exam
+# Competitor profile
 
-Optional child medical exam date, 6 calendar month validity, 14 day warning, list and attendance indicators
+Sex, recreational/competitor profile, auto age by Belgrade year, fixed optional weight and class, preserve legacy groups and enrollment
