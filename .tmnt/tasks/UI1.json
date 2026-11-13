@@ -1,0 +1,73 @@
+{
+  "id": "UI1",
+  "role": "michelangelo",
+  "title": "Perun responsive visual design",
+  "specRevision": "PERUN-MOBILE-DESIGN",
+  "status": "awaiting_review",
+  "retryUsed": 0,
+  "lastAttempt": {
+    "requestId": "UI1-perun-mobile-design",
+    "requestHash": "b64cd67e9e7f938e681ea0207f3b7639728e359cdb7e8638f34c87e1aac8d527",
+    "task": "UI1",
+    "role": "michelangelo",
+    "phase": "initial",
+    "state": "returned",
+    "time": "2026-11-13T16:48:34.892Z",
+    "status": "verify",
+    "finalPath": "F:\\Projects\\tkd-perun\\.tmnt\\runs\\UI1-michelangelo-FHUhc9\\response.md"
+  },
+  "readFiles": [
+    "index.html",
+    "src/App.css",
+    "src/App.tsx",
+    "src/index.css",
+    "src/components/AppShell.tsx",
+    "src/components/AuthScreen.tsx",
+    "src/components/DashboardPage.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/components/MedicalExamStatus.tsx",
+    "public/perun-logo.jpg",
+    "package.json",
+    "playwright.config.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/phase1.spec.ts"
+  ],
+  "reviewFiles": [
+    "index.html",
+    "src/App.css",
+    "src/App.tsx",
+    "src/index.css",
+    "src/components/AppShell.tsx",
+    "src/components/AuthScreen.tsx",
+    "src/components/DashboardPage.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/components/MedicalExamStatus.tsx",
+    "public/perun-logo.jpg",
+    "package.json",
+    "playwright.config.ts",
+    "tests/e2e/attendance.spec.ts",
+    "tests/e2e/phase1.spec.ts"
+  ],
+  "allowedFiles": [
+    "index.html",
+    "src/App.css",
+    "src/App.tsx",
+    "src/index.css",
+    "src/components/AppShell.tsx",
+    "src/components/AuthScreen.tsx",
+    "src/components/DashboardPage.tsx",
+    "src/components/SettingsPage.tsx",
+    "src/components/ChildrenPage.tsx",
+    "src/components/AttendancePage.tsx",
+    "src/components/MedicalExamStatus.tsx"
+  ],
+  "dod": [
+    "Apply approved design and preserve existing workflows.",
+    "Typecheck, lint, build and unit tests pass."
+  ],
+  "manualCriteria": []
+}

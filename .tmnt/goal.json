@@ -1,6 +1,6 @@
 {
-  "revision": "COMPETITOR-PROFILE",
+  "revision": "PERUN-MOBILE-DESIGN",
   "status": "approved",
-  "scope": "Sex, recreational/competitor profile, auto age by Belgrade year, fixed optional weight and class, preserve legacy groups and enrollment",
-  "approvalEvidence": "User approved plan with all current children marked recreational: go"
+  "scope": "Apply approved responsive Perun prototype to existing app",
+  "approvalEvidence": "User: ti da uradis"
 }

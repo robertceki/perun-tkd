@@ -81,7 +81,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     if (await change(() => repository!.setPresence(session.id, childId, value)) === 'saved') setPresenceDraft(null)
   }
 
-  return <section aria-busy={checking || club.saving}>
+  return <section className="roll-call" aria-busy={checking || club.saving}>
     <button type="button" className="btn btn-outline-secondary mb-3" onClick={back}>Nazad na termine</button>
     <h1 ref={heading} tabIndex={-1} className="h3">{term.group} · {formatTime(term.start)}–{formatTime(term.end)}</h1>
     <p>{term.date}</p>
@@ -94,7 +94,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
       <h2 className="h5">Planirani spisak</h2>
-      {preview.length ? <ul>{preview.map(child => <li key={child.id}>{child.first_name} {child.last_name}{examWarning(child.id)}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
+      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
     </section>}
     {session && <>
       {session.cancelled_at && <p role="status">Trening je otkazan. Spisak je dostupan samo za pregled.</p>}
@@ -103,10 +103,10 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
       <fieldset disabled={checking || busy || !canStart || !!session.cancelled_at}>
         <legend className="h5">Spisak prisustva</legend>
         {!rows.length && <p role="status">Na spisku nema dece.</p>}
-        {!canStart && rows.length > 0 && <ul>{rows.map(row => <li key={row.child_id}>
-          {row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''}{examWarning(row.child_id)} · {row.present ? 'Prisutan' : 'Odsutan'}
+        {!canStart && rows.length > 0 && <ul className="roll-call-list">{rows.map(row => <li key={row.child_id}>
+          <span>{row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''} · {row.present ? 'Prisutan' : 'Odsutan'}</span>{examWarning(row.child_id)}
         </li>)}</ul>}
-        {canStart && rows.map(row => <div key={row.child_id} className="d-flex align-items-baseline flex-wrap"><Check
+        {canStart && rows.map(row => <div key={row.child_id} className="roll-call-row"><Check
           label={row.child_first_name + ' ' + row.child_last_name + (row.is_substitute ? ' (zamena)' : '')}
           checked={presenceDraft?.childId === row.child_id && !session.cancelled_at ? presenceDraft.value : row.present}
           disabled={!!presenceDraft && presenceDraft.childId !== row.child_id}
