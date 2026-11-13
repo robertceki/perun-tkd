@@ -9,6 +9,7 @@ import { Check, Feedback, Field, FormActions, SelectField } from './Feedback'
 const days = ['Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja']
 export function TermsPage({ data, club, navigate, today }: { data: ClubData; club: ClubController; navigate: (page: Page) => void; today: string }) {
   const [draft, setDraft] = useState<WeeklyTerm | null>(null)
+  const [scheduleDay, setScheduleDay] = useState<number | null>(null)
   const [assignments, setAssignments] = useState<TermAssignment[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const previous = data.terms.find(t => t.id === draft?.id)
@@ -25,10 +26,14 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
   const draftGroup = data.groups.find(group => group.id === draft?.group_id)
   const eligible = data.children.filter(c => c.status === 'active' && allowsCompetitionEnrollment(c, draftGroup) && (c.main_group_id === draft?.group_id || c.competition_group_id === draft?.group_id))
   const enrollmentReady = !!draft && draft.active && data.groups.some(g => g.id === draft.group_id && g.active) && (!draft.trainer_id || data.trainers.some(t => t.id === draft.trainer_id && t.active))
-  return <><h1 className="h3">Nedeljni termini</h1><p>Lokacija kluba nije podešena</p><p>Datumi uključuju oba kraja perioda. Za novi raspored povezanog termina napravite novi termin; istorijski upisi ostaju nepromenjeni.</p>
-    {!ready && <div className="alert alert-info">Za novi termin potrebni su aktivna grupa i potvrđen serverski datum. <button type="button" className="btn btn-link" onClick={() => navigate('Grupe')}>Otvori grupe</button></div>}
-    <button type="button" className="btn btn-primary mb-3" disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), group_id: '', weekday: 1, starts_at: '', ends_at: '', trainer_id: '', valid_from: today, valid_to: null, active: true })}>Dodaj termin</button>
-    {draft && <section className="card mb-4"><div className="card-body"><h2 className="h4">{previous ? 'Uredi termin i upise' : 'Novi termin'}</h2><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
+  const scheduledDays = [...new Set(data.terms.map(term => term.weekday))].sort((a, b) => a - b)
+  const selectedDay = scheduleDay !== null && scheduledDays.includes(scheduleDay) ? scheduleDay : scheduledDays[0]
+  const visibleTerms = data.terms.filter(term => term.weekday === selectedDay)
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+
+  if (draft) return <>
+    <button type="button" className="btn btn-link px-0 mb-2" disabled={club.busy} onClick={() => setDraft(null)}>‹ Nazad na raspored termina</button>
+    <section className="card mb-4"><div className="card-body"><h2 className="h4">{previous ? 'Uredi termin i upise' : 'Novi termin'}</h2><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
       {scheduleLocked && <div className="alert alert-info">Raspored je zaključan jer postoje upisi. Možete završiti upise, promeniti završetak važenja ili deaktivirati termin. Za drugi raspored napravite novi termin.</div>}
       <SelectField label="Grupa termina" required disabled={scheduleLocked} value={draft.group_id} onChange={e => setDraft({ ...draft, group_id: e.target.value })}><option value="">Izaberite grupu</option>{data.groups.filter(g => g.active || g.id === previous?.group_id).map(g => <option key={g.id} value={g.id}>{g.name} ({g.kind === 'main' ? 'glavna' : 'takmičarska'}){!g.active ? ' — neaktivna' : ''}</option>)}</SelectField>
       <SelectField label="Dan u nedelji" disabled={scheduleLocked} value={draft.weekday} onChange={e => setDraft({ ...draft, weekday: Number(e.target.value) })}>{days.map((day, index) => <option key={day} value={index + 1}>{day}</option>)}</SelectField>
@@ -68,9 +73,28 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
         {!enrollmentReady && <p>Novi ili produženi upisi zahtevaju aktivan termin, grupu i trenera.</p>}
         <button type="button" className="btn btn-outline-primary" disabled={!eligible.length || !enrollmentReady} onClick={() => setAssignments([...assignments, { term_id: draft.id, child_id: '', valid_from: draft.valid_from > today ? draft.valid_from : today, valid_to: draft.valid_to }])}>Dodaj upis</button>
       </fieldset><FormActions busy={club.busy} cancel={() => setDraft(null)} />
-    </fieldset></form></div></section>}
-    {!data.terms.length ? <p role="status">Nema nedeljnih termina. Posle grupa, kontakata i dece dodajte termin i upise.</p> : <div className="table-responsive"><table className="table table-striped"><caption>Nedeljni raspored i upisi (uključujući istoriju)</caption><thead><tr><th scope="col">Dan / vreme</th><th scope="col">Grupa</th><th scope="col">Važenje / status</th><th scope="col">Upisi</th><th scope="col">Radnja</th></tr></thead><tbody>{[...data.terms].sort((a, b) => a.weekday - b.weekday || a.starts_at.localeCompare(b.starts_at)).map(term => <tr key={term.id}><td>{days[term.weekday - 1]}<br />{formatTime(term.starts_at)}–{formatTime(term.ends_at)}</td><td>{data.groups.find(g => g.id === term.group_id)?.name}</td><td>{term.valid_from} – {term.valid_to ?? 'bez završetka'}<br />{term.active ? 'Aktivan' : 'Neaktivan'}</td><td>{data.assignments.filter(a => a.term_id === term.id).map(a => { const c = data.children.find(child => child.id === a.child_id); return <div key={`${a.child_id}-${a.valid_from}`}>{c?.first_name} {c?.last_name}: {a.valid_from} – {a.valid_to ?? 'bez završetka'}{a.cancelled_at ? ' (otkazan)' : a.valid_to && a.valid_to < today ? ' (završen)' : ''}</div> })}</td><td><button type="button" className="btn btn-outline-primary btn-sm" disabled={club.busy} onClick={() => edit(term)} aria-label={`Uredi termin ${days[term.weekday - 1]} ${formatTime(term.starts_at)}`}>Uredi / upisi</button></td></tr>)}</tbody></table></div>}
+    </fieldset></form></div></section>
+  </>
+
+  return <><h1 className="h3">Nedeljni termini</h1>
+    {!ready && <div className="alert alert-info">Za novi termin potrebni su aktivna grupa i potvrđen serverski datum. <button type="button" className="btn btn-link" onClick={() => navigate('Grupe')}>Otvori grupe</button></div>}
+    <button type="button" className="btn btn-primary mb-3" disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), group_id: '', weekday: 1, starts_at: '', ends_at: '', trainer_id: '', valid_from: today, valid_to: null, active: true })}>Dodaj termin</button>
+    {!scheduledDays.length ? <p role="status">Nema nedeljnih termina.</p> : <>
+      <SelectField label="Dan rasporeda" value={selectedDay} onChange={event => setScheduleDay(Number(event.target.value))}>
+        {scheduledDays.map(day => <option key={day} value={day}>{days[day - 1]}</option>)}
+      </SelectField>
+      <ul className="list-unstyled mb-0" aria-label="Nedeljni termini">
+        {visibleTerms.map(term => <li key={term.id}>
+          <button type="button" className="child-directory-row" disabled={club.busy} onClick={() => edit(term)}
+            aria-label={`Uredi termin ${days[term.weekday - 1]} ${formatTime(term.starts_at)}`}>
+            <span className="child-directory-info">
+              <strong>{data.groups.find(group => group.id === term.group_id)?.name ?? 'Grupa'}</strong>
+              <small>{formatTime(term.starts_at)}–{formatTime(term.ends_at)}{term.active ? '' : ' · Neaktivan'}</small>
+            </span>
+            <span aria-hidden="true">›</span>
+          </button>
+        </li>)}
+      </ul>
+    </>}
   </>
 }
-
-

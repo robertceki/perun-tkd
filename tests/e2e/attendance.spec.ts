@@ -76,7 +76,7 @@ test('future preview and cancelled attendance are read-only', async ({ page, cal
   await openTime(main, '18:00').click()
   page.on('dialog', dialog => dialog.accept())
   await main.getByRole('button', { name: /Otkaži (trening|termin)/i }).click()
-  await expect(main.getByText(/otkazan/i).first()).toBeVisible()
+  await expect(main.getByRole('status').filter({ hasText: /Trening je otkazan/i })).toBeVisible()
   const enabledControls = main.getByRole('checkbox', { disabled: false })
     .or(main.getByRole('button', { name: /Dodaj zamenu|Završi (prozivku|trening)/i, disabled: false }))
   await expect(enabledControls).toHaveCount(0)

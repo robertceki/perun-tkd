@@ -129,6 +129,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   const [date, setDate] = useState('')
   const [week, setWeek] = useState(false)
   const [selected, setSelected] = useState<DatedTerm | null>(null)
+  const termList = useRef<HTMLDivElement>(null)
   const club = useClubData(trainerKey)
   const data = club.data
   const latestTerm = selected && data && datedTerms(data, selected.date, selected.date).find(term => term.termId === selected.termId)
@@ -139,6 +140,14 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   const days = currentDate ? week
     ? Array.from({ length: 7 }, (_, i) => moveDate(currentDate, i + 1 - weekday(currentDate)))
     : [currentDate] : []
+
+  function closeTerm() {
+    const list = termList.current
+    const target = list?.querySelector<HTMLElement>('.term-button[aria-pressed="true"]:not([hidden] .term-button)')
+      ?? list?.querySelector<HTMLElement>('h1:not([hidden] h1)')
+    setSelected(null)
+    window.requestAnimationFrame(() => target?.focus())
+  }
 
   function navigate(next: Page) {
     if (next === 'Deca' || next === 'Kontakti' || next === 'Grupe') {
@@ -156,25 +165,29 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
     {clock.error && <div className="alert alert-warning" role="alert">Serversko vreme nije dostupno. <button type="button" className="btn btn-outline-secondary" onClick={() => void clock.refresh()}>Ponovo proveri vreme</button></div>}
     {clock.instant === undefined && !clock.error && <p role="status">Provera serverskog vremena…</p>}
     {data && <>
-      {selected && activeTerm && <AttendancePage key={selected.date + '/' + selected.termId} term={activeTerm}
-        data={data} club={club} opening={activeTerm.startsAt - rollCallLeadTime}
-        serverInstant={clock.instant} today={clock.error ? '' : today} authBusy={authBusy}
-        verifyBoundary={clock.verifyBoundary} back={() => setSelected(null)} />}
-      {selected && !activeTerm && <p role="alert">Termin više nije dostupan. <button type="button" className="btn btn-link" onClick={() => setSelected(null)}>Nazad na termine</button></p>}
-      <div hidden={page !== 'Početna' || !!selected}>
-        <h1 className="h3">Današnji termini</h1>
-        {today && <><p>{today}</p><TermList terms={datedTerms(data, today, today)} open={setSelected} /></>}
-      </div>
-      <div hidden={page !== 'Termini' || !!selected}>
-        <h1 className="h3">Termini</h1>
-        <Field label="Datum" type="date" min="0001-01-07" max="9999-12-24" value={currentDate} onChange={event => {
-          if (!event.target.value || event.target.validity.valid) setDate(event.target.value)
-        }} />
-        <div className="d-flex flex-wrap gap-2 mb-3">
-          <button type="button" className="btn btn-outline-primary" aria-pressed={!week} onClick={() => setWeek(false)}>Dan</button>
-          <button type="button" className="btn btn-outline-primary" aria-pressed={week} onClick={() => setWeek(true)}>Nedelja</button>
+      <div className="term-layout">
+        <div ref={termList} className={selected ? 'term-list-pane term-list-selected' : 'term-list-pane'} hidden={page === 'Podešavanja'}>
+          <div hidden={page !== 'Početna'}>
+            <h1 tabIndex={-1} className="h3">Današnji termini</h1>
+            {today && <><p>{today}</p><TermList terms={datedTerms(data, today, today)} open={setSelected} selected={selected} /></>}
+          </div>
+          <div hidden={page !== 'Termini'}>
+            <h1 tabIndex={-1} className="h3">Termini</h1>
+            <Field label="Datum" type="date" min="0001-01-07" max="9999-12-24" value={currentDate} onChange={event => {
+              if (!event.target.value || event.target.validity.valid) setDate(event.target.value)
+            }} />
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              <button type="button" className="btn btn-outline-primary" aria-pressed={!week} onClick={() => setWeek(false)}>Dan</button>
+              <button type="button" className="btn btn-outline-primary" aria-pressed={week} onClick={() => setWeek(true)}>Nedelja</button>
+            </div>
+            {days.map(day => <section key={day}><h2 className="h5">{day}</h2><TermList terms={datedTerms(data, day, today)} open={setSelected} selected={selected} /></section>)}
+          </div>
         </div>
-        {days.map(day => <section key={day}><h2 className="h5">{day}</h2><TermList terms={datedTerms(data, day, today)} open={setSelected} /></section>)}
+        {selected && activeTerm && <AttendancePage key={selected.date + '/' + selected.termId} term={activeTerm}
+          data={data} club={club} opening={activeTerm.startsAt - rollCallLeadTime}
+          serverInstant={clock.instant} today={clock.error ? '' : today} authBusy={authBusy}
+          verifyBoundary={clock.verifyBoundary} back={closeTerm} />}
+        {selected && !activeTerm && <p role="alert">Termin više nije dostupan. <button type="button" className="btn btn-link" onClick={closeTerm}>Nazad na termine</button></p>}
       </div>
       <div hidden={page !== 'Podešavanja'}><SettingsPage tab={tab} select={setTab} data={data} club={club} navigate={navigate} today={clock.error ? '' : today} /></div>
     </>}
@@ -188,6 +201,7 @@ export default function App() {
   return <AuthorizedApp key={trainerKey} trainerKey={trainerKey} trainer={auth.trainer.full_name}
     logout={() => void auth.logout()} authBusy={auth.busy} authError={auth.error} />
 }
+
 
 
 

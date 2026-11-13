@@ -1,3 +1,33 @@
-body { margin: 0; min-width: 320px; }
+:root {
+  --perun-ink: #222229;
+  --perun-gold: #c5a45e;
+  --perun-paper: #faf8f3;
+  --perun-line: #ded9ce;
+  --perun-selected: #f2ebdc;
+  --perun-nav-height: calc(56px + env(safe-area-inset-bottom));
+}
+
+html {
+  color-scheme: light;
+  scroll-padding-block: 12px calc(var(--perun-nav-height) + 16px);
+}
+
+body {
+  margin: 0;
+  background: var(--perun-paper);
+  color: var(--perun-ink);
+  overflow-wrap: anywhere;
+}
 #root { min-height: 100vh; }
 input, select, textarea { max-width: 100%; }
+
+
+.table td, .table th { vertical-align: middle; }
+.card, .container, fieldset { min-width: 0; }
+.text-break { overflow-wrap: anywhere; }
+
+.competitor-form .form-label:has(+ :required)::after,
+.form-label:has(+ select[autocomplete="sex"]:required)::after {
+  content: " *" / "";
+  color: var(--bs-danger-text-emphasis);
+}

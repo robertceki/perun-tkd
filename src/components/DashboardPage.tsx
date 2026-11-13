@@ -11,12 +11,14 @@ export interface DatedTerm {
   session?: TrainingSession
 }
 
-export function TermList({ terms, open }: { terms: DatedTerm[]; open: (term: DatedTerm) => void }) {
+export function TermList({ terms, open, selected }: { terms: DatedTerm[]; open: (term: DatedTerm) => void; selected: DatedTerm | null }) {
   if (!terms.length) return <p role="status">Nema termina za izabrani datum.</p>
-  return <ul className="list-group mb-3">{terms.map(term => <li key={term.termId} className="list-group-item">
-    <button className="btn btn-outline-primary text-start w-100" type="button" onClick={() => open(term)}>
-      {formatTime(term.start)}–{formatTime(term.end)} · {term.group}{term.session?.cancelled_at ? ' · Otkazan' : ''}
+  return <ul className="term-list mb-3">{terms.map(term => <li key={term.termId}>
+    <button className="term-button" type="button" aria-pressed={selected?.termId === term.termId && selected.date === term.date} onClick={() => open(term)}>
+      <span>{formatTime(term.start)}–{formatTime(term.end)} · {term.group}{term.session?.cancelled_at ? ' · Otkazan' : ''}</span>
+      <span aria-hidden="true">›</span>
     </button>
   </li>)}</ul>
 }
+
 

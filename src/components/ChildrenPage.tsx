@@ -10,6 +10,7 @@ import type { Page } from './AppShell'
 import { Feedback, Field, FormActions, SelectField } from './Feedback'
 
 export function ChildrenPage({ data, club, navigate, today, openSchedule }: { data: ClubData; club: ClubController; navigate: (page: Page) => void; today: string; openSchedule?: () => void }) {
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('all')
   const [medicalWarningOnly, setMedicalWarningOnly] = useState(false)
@@ -36,19 +37,30 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
     setErrors(invalid)
     if (!invalid.length && await club.saveChild(value, links) === 'saved') setDraft(null)
   }
+  const filterCount = Number(status !== 'all') + Number(!!group) + Number(memberType !== 'all') + Number(medicalWarningOnly)
   const list = data.children.map(child => ({ child, medicalExam: getMedicalExamDetails(child.medical_exam_date, today) }))
     .filter(({ child: c, medicalExam }) => (memberType === 'all' || (c.member_type ?? 'recreational') === memberType) && (!medicalWarningOnly || isMedicalExamWarning(medicalExam.status)) && `${c.first_name} ${c.last_name}`.toLocaleLowerCase('sr-Latn').includes(query.toLocaleLowerCase('sr-Latn')) && (status === 'all' || c.status === status) && (!group || c.main_group_id === group || c.competition_group_id === group))
-  return <><h1 className="h3">Deca</h1><p>Za promenu grupe ili deaktivaciju najpre završite postojeće upise u termine zaključno sa prethodnim danom.</p>
-    {!ready && <div className="alert alert-info">Za novo dete potrebni su aktivna glavna grupa i kontakt. <button type="button" className="btn btn-link" onClick={() => navigate('Grupe')}>Otvori grupe</button><button type="button" className="btn btn-link" onClick={() => navigate('Kontakti')}>Otvori kontakte</button></div>}
-    <button type="button" className="btn btn-primary mb-3" disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', address: '', belt: '', status: 'active', main_group_id: '', competition_group_id: null })}>Dodaj dete</button>
-    {draft && <section className="card mb-4"><div className="card-body"><h2 className="h4">{previous ? 'Uredi dete' : 'Novo dete'}</h2><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
+  if (draft) return <>
+    <button type="button" className="btn btn-link px-0 mb-2" disabled={club.busy} onClick={() => setDraft(null)}>‹ Nazad na spisak dece</button>
+    <section className="card mb-4"><div className="card-body"><h2 className="h4">{previous ? 'Uredi dete' : 'Novo dete'}</h2><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
       {draft.member_type === 'competitor' && <p className="small text-body-secondary">Polja označena zvezdicom (*) su obavezna. Potreban je jedan glavni kontakt.</p>}
       <div className="row"><div className="col-md-6"><Field label="Ime deteta" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} /></div><div className="col-md-6"><Field label="Prezime deteta" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} /></div></div>
       <CompetitorProfile child={draft} previous={previous} data={data} today={today} change={setDraft} openSchedule={openSchedule ?? (() => navigate('Termini'))} />
-      <Field label="Datum lekarskog pregleda" type="date" max={today || undefined} value={draft.medical_exam_date ?? ''} onChange={e => setDraft({ ...draft, medical_exam_date: e.target.value || null })} />
-      <button type="button" className="btn btn-outline-secondary btn-sm mb-3" disabled={!draft.medical_exam_date} onClick={() => setDraft({ ...draft, medical_exam_date: null })}>Obriši datum lekarskog pregleda</button>
-      <Field label="Adresa (opciono pri upisu)" autoComplete="street-address" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
-      <Field label="Pojas (opciono pri upisu)" value={draft.belt} onChange={e => setDraft({ ...draft, belt: e.target.value })} />
+      <div className="d-flex align-items-end gap-2 mb-3">
+        <div className="flex-grow-1 child-search">
+          <Field label="Datum lekarskog pregleda" type="date" max={today || undefined} value={draft.medical_exam_date ?? ''} onChange={e => setDraft({ ...draft, medical_exam_date: e.target.value || null })} />
+        </div>
+        <button type="button" className="btn btn-outline-danger d-inline-flex align-items-center justify-content-center"
+          style={{ width: 44 }} disabled={!draft.medical_exam_date} aria-label="Obriši datum lekarskog pregleda"
+          title="Obriši datum lekarskog pregleda" onClick={() => setDraft({ ...draft, medical_exam_date: null })}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 7h16m-10 4v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+          </svg>
+        </button>
+      </div>
+      <div className="mb-3"><MedicalExamStatus details={getMedicalExamDetails(draft.medical_exam_date, today)} /></div>
+      <Field label="Adresa" autoComplete="street-address" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
+      <Field label="Pojas" value={draft.belt} onChange={e => setDraft({ ...draft, belt: e.target.value })} />
       <div className="mb-3">
         <label className="form-label" htmlFor="child-notes">Napomene</label>
         <textarea className="form-control" id="child-notes" rows={3} value={draft.notes ?? ''} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
@@ -64,15 +76,53 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         </div>)}
         <button type="button" className="btn btn-outline-primary" disabled={links.length >= data.contacts.length} onClick={() => setLinks([...links, { child_id: draft.id, contact_id: '', relationship: '', is_primary: links.length === 0 }])}>Poveži postojeći kontakt</button>
       </fieldset><FormActions busy={club.busy} cancel={() => setDraft(null)} />
-    </fieldset></form></div></section>}
-    <div className="row"><div className="col-md-6"><Field label="Pretraži decu po imenu i prezimenu" type="search" value={query} onChange={e => setQuery(e.target.value)} /></div><div className="col-md-3"><SelectField label="Filter statusa" value={status} onChange={e => setStatus(e.target.value)}><option value="all">Svi statusi</option><option value="active">Aktivna</option><option value="inactive">Neaktivna</option></SelectField></div><div className="col-md-3"><SelectField label="Filter grupe" value={group} onChange={e => setGroup(e.target.value)}><option value="">Sve grupe</option>{data.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</SelectField></div></div>
-    <SelectField label="Filter tipa člana" value={memberType} onChange={e => setMemberType(e.target.value)}>
+    </fieldset></form></div></section>
+  </>
+
+  return <><h1 className="h3">Deca</h1>
+    {!ready && <div className="alert alert-info">Za novo dete potrebni su aktivna glavna grupa i kontakt. <button type="button" className="btn btn-link" onClick={() => navigate('Grupe')}>Otvori grupe</button><button type="button" className="btn btn-link" onClick={() => navigate('Kontakti')}>Otvori kontakte</button></div>}
+    <button type="button" className="btn btn-primary mb-3" disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', address: '', belt: '', status: 'active', main_group_id: '', competition_group_id: null })}>Dodaj dete</button>
+
+    <div className="d-flex align-items-end gap-2 mb-3">
+      <div className="flex-grow-1 child-search">
+        <Field label="Pretraži decu" type="search" placeholder="Ime i prezime" value={query} onChange={e => { setQuery(e.target.value) }} />
+      </div>
+      <button type="button" className="btn btn-outline-primary" aria-expanded={filtersOpen} aria-controls="child-filters"
+        onClick={() => setFiltersOpen(!filtersOpen)}>Filteri{filterCount > 0 ? ` (${filterCount})` : ''}</button>
+    </div>
+    <div id="child-filters" hidden={!filtersOpen} className="border p-3 mb-3">
+      <div className="child-filter-grid">
+<div><SelectField label="Status" value={status} onChange={e => { setStatus(e.target.value) }}><option value="all">Svi statusi</option><option value="active">Aktivna</option><option value="inactive">Neaktivna</option></SelectField></div>
+<div><SelectField label="Grupa" value={group} onChange={e => { setGroup(e.target.value) }}><option value="">Sve grupe</option>{data.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</SelectField></div>
+<div><SelectField label="Tip člana" value={memberType} onChange={e => { setMemberType(e.target.value) }}>
       <option value="all">Svi tipovi članova</option>
       <option value="recreational">{memberTypeLabels.recreational}</option>
       <option value="competitor">{memberTypeLabels.competitor}</option>
-    </SelectField>
-    <SelectField label="Filter lekarskog pregleda" value={medicalWarningOnly ? 'warning' : 'all'} onChange={e => setMedicalWarningOnly(e.target.value === 'warning')}><option value="all">Svi statusi pregleda</option><option value="warning">Ističe uskoro ili je istekao</option></SelectField>
-    {!list.length ? <p role="status">Nema dece koja odgovaraju izabranim filterima.</p> : <div className="table-responsive"><table className="table table-striped"><caption>Deca, grupe i kontakti</caption><thead><tr><th scope="col">Dete</th><th scope="col">Datum rođenja / pojas</th><th scope="col">Grupe / status</th><th scope="col">Kontakti</th><th scope="col">Radnja</th></tr></thead><tbody>{list.map(({ child, medicalExam }) => <tr key={child.id}><td>{child.first_name} {child.last_name} <span className="badge text-bg-secondary">{memberTypeLabels[child.member_type ?? 'recreational']}</span><MedicalExamStatus details={medicalExam} /><div className="small text-break">{child.address}</div></td><td>{child.birth_date}<br />{child.belt || 'Pojas nije unet'}</td><td>{data.groups.find(g => g.id === child.main_group_id)?.name}{child.competition_group_id && <div>Takmičarska: {data.groups.find(g => g.id === child.competition_group_id)?.name}</div>}<div>{child.status === 'active' ? 'Aktivno' : 'Neaktivno'}</div></td><td>{data.childContacts.filter(l => l.child_id === child.id).map(l => { const c = data.contacts.find(item => item.id === l.contact_id); return <div key={l.contact_id}>{c?.first_name} {c?.last_name} ({l.relationship}{l.is_primary ? ', glavni' : ''})</div> })}</td><td><button type="button" className="btn btn-outline-primary btn-sm" disabled={club.busy} onClick={() => edit(child)} aria-label={`Uredi dete ${child.first_name} ${child.last_name}`}>Uredi / status</button></td></tr>)}</tbody></table></div>}
+    </SelectField></div>
+<div><SelectField label="Lekarski pregled" value={medicalWarningOnly ? 'warning' : 'all'} onChange={e => { setMedicalWarningOnly(e.target.value === 'warning') }}><option value="all">Svi statusi pregleda</option><option value="warning">Ističe uskoro ili je istekao</option></SelectField></div>
+      </div>
+      <div className="d-flex flex-wrap gap-2">
+        <button type="button" className="btn btn-primary" onClick={() => setFiltersOpen(false)}>Prikaži rezultate</button>
+        {filterCount > 0 && <button type="button" className="btn btn-outline-secondary" onClick={() => {
+          setStatus('all'); setGroup(''); setMemberType('all'); setMedicalWarningOnly(false)
+        }}>Poništi filtere</button>}
+      </div>
+    </div>
+    {!list.length ? <p role="status">Nema dece koja odgovaraju izabranim filterima.</p> : <>
+      <ul className="child-directory list-unstyled mb-2" aria-label="Spisak dece">
+        {list.map(({ child, medicalExam }) => <li key={child.id}>
+          <button type="button" className="child-directory-row" disabled={club.busy}
+            onClick={() => edit(child)} aria-label={`Uredi dete ${child.first_name} ${child.last_name}`}>
+            <span className="child-directory-info">
+              <strong>{child.first_name} {child.last_name}</strong>
+              <small>{data.groups.find(group => group.id === child.main_group_id)?.name}</small>
+            </span>
+            <MedicalExamStatus details={medicalExam} warningsOnly />
+            {child.status === 'inactive' && <span className="text-danger fw-bold fs-5" role="img" aria-label="Neaktivan član" title="Neaktivan član">!</span>}
+            <span aria-hidden="true">›</span>
+          </button>
+        </li>)}
+      </ul>
+    </>}
   </>
 }
-
