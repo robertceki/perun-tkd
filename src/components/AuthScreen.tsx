@@ -17,7 +17,7 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
     } else if (reset) await auth.reset(email)
     else await auth.login(email, password)
   }
-  return <main className="container py-5"><div className="row justify-content-center"><div className="col-12 col-md-7 col-lg-5"><h1 className="h3">TKD Perun</h1><div className="card"><div className="card-body"><h2 className="h4">{recovery ? 'Nova lozinka' : reset ? 'Oporavak lozinke' : 'Prijava trenera'}</h2>
+  return <main className="container py-5"><div className="row justify-content-center"><div className="col-12 col-md-7 col-lg-5"><div className="perun-brand auth-brand"><img src="/perun-logo.jpg" alt="" width="62" height="62" /><div><h1 className="h3 mb-0">TKD Perun</h1><small>Trening centar Pančevo</small></div></div><div className="card"><div className="card-body"><h2 className="h4">{recovery ? 'Nova lozinka' : reset ? 'Oporavak lozinke' : 'Prijava trenera'}</h2>
     {!auth.configured && <Feedback errors={['Veza sa servisom nije podešena. Obratite se administratoru.']} />}
     <Feedback errors={[auth.error, error].filter(Boolean)} message={auth.message} />
     {auth.status === 'loading' && !auth.busy && <p role="status">Provera sesije…</p>}
