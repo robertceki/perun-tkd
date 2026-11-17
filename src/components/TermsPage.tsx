@@ -36,14 +36,14 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
 
   if (draft) return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na raspored termina" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi termin i upise' : 'Novi termin'}</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
-      {scheduleLocked && <Alert severity="info" sx={{ mb: 1.5 }}>Raspored je zaključan jer postoje upisi. Možete završiti upise, promeniti završetak važenja ili deaktivirati termin. Za drugi raspored napravite novi termin.</Alert>}
+      {scheduleLocked && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Raspored je zaključan jer postoje upisi. Možete završiti upise, promeniti završetak važenja ili deaktivirati termin. Za drugi raspored napravite novi termin.</Alert>}
       <SelectField label="Grupa termina" required disabled={scheduleLocked} value={draft.group_id} onChange={e => setDraft({ ...draft, group_id: e.target.value })}><option value="">Izaberite grupu</option>{data.groups.filter(g => g.active || g.id === previous?.group_id).map(g => <option key={g.id} value={g.id}>{g.name} ({g.kind === 'main' ? 'glavna' : 'takmičarska'}){!g.active ? ' — neaktivna' : ''}</option>)}</SelectField>
       <SelectField label="Dan u nedelji" disabled={scheduleLocked} value={draft.weekday} onChange={e => setDraft({ ...draft, weekday: Number(e.target.value) })}>{days.map((day, index) => <option key={day} value={index + 1}>{day}</option>)}</SelectField>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Početak" type="time" step="60" required disabled={scheduleLocked} value={draft.starts_at.slice(0, 5)} onChange={e => setDraft({ ...draft, starts_at: e.target.value })} /><Field label="Završetak" type="time" step="60" required disabled={scheduleLocked} value={draft.ends_at.slice(0, 5)} onChange={e => setDraft({ ...draft, ends_at: e.target.value })} /></Box>
       <Field label="Važi od" type="date" required disabled={scheduleLocked} value={draft.valid_from} onChange={e => setDraft({ ...draft, valid_from: e.target.value })} />
       <Field label="Važi do (prazno: bez završetka)" type="date" min={draft.valid_from} value={draft.valid_to ?? ''} onChange={e => setDraft({ ...draft, valid_to: e.target.value || null })} />
       <Check label="Aktivan termin" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} />
-      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi dece</Typography><p>Postojeći upis završite unosom datuma „Upis do“. Upis se ne briše. Novi period istog deteta mora početi posle završetka prethodnog. Proširenje termina prvo sačuvajte, pa zatim proširite upise.</p>
+      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi dece</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Postojeći upis završite unosom datuma „Upis do“. Upis se ne briše. Novi period istog deteta mora početi posle završetka prethodnog. Proširenje termina prvo sačuvajte, pa zatim proširite upise.</Alert>
         {assignments.map((assignment, index) => {
           const old = oldRows.find(a => a.child_id === assignment.child_id && a.valid_from === assignment.valid_from)
           const historical = !!old?.cancelled_at || (!!old?.valid_to && old.valid_to < today)
@@ -71,17 +71,17 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
             {!old && <Button type="button" variant="outlined" onClick={() => setAssignments(assignments.filter((_, i) => i !== index))}>Ukloni nesačuvani upis {index + 1}</Button>}
           </Box>
         })}
-        {!eligible.length && <p>U grupi nema dece koja ispunjavaju uslove za upis. <Button type="button" color="secondary" onClick={() => navigate('Deca')}>Otvori decu</Button></p>}
-        {!enrollmentReady && <p>Novi ili produženi upisi zahtevaju aktivan termin, grupu i trenera.</p>}
+        {!eligible.length && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>U grupi nema dece koja ispunjavaju uslove za upis. <Button type="button" color="secondary" onClick={() => navigate('Deca')}>Otvori decu</Button></Alert>}
+        {!enrollmentReady && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Novi ili produženi upisi zahtevaju aktivan termin, grupu i trenera.</Alert>}
         <Button type="button" variant="outlined" disabled={!eligible.length || !enrollmentReady} onClick={() => setAssignments([...assignments, { term_id: draft.id, child_id: '', valid_from: draft.valid_from > today ? draft.valid_from : today, valid_to: draft.valid_to }])}>Dodaj upis</Button>
       </Box><FormActions busy={club.busy} cancel={() => setDraft(null)} />
     </fieldset></form></SettingsDetail>
   </>
 
   return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Nedeljni termini</Typography>
-    {!ready && <Alert severity="info" sx={{ mb: 1.5 }}>Za novi termin potrebni su aktivna grupa i potvrđen serverski datum. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button></Alert>}
+    {!ready && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Za novi termin potrebni su aktivna grupa i potvrđen serverski datum. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button></Alert>}
     <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), group_id: '', weekday: 1, starts_at: '', ends_at: '', trainer_id: '', valid_from: today, valid_to: null, active: true })}>Dodaj termin</Button>
-    {!scheduledDays.length ? <p role="status">Nema nedeljnih termina.</p> : <>
+    {!scheduledDays.length ? <Alert variant="outlined" severity="info" role="status">Nema nedeljnih termina.</Alert> : <>
       <SelectField label="Dan rasporeda" value={selectedDay} onChange={event => setScheduleDay(Number(event.target.value))}>
         {scheduledDays.map(day => <option key={day} value={day}>{days[day - 1]}</option>)}
       </SelectField>

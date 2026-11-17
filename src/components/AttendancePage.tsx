@@ -1,3 +1,4 @@
+import { PendingStatus } from './Feedback'
 import { allowsCompetitionEnrollment } from '../domain/competitorProfile'
 import { useEffect, useRef, useState } from 'react'
 import { getMedicalExamDetails } from '../domain/medicalExam'
@@ -7,7 +8,7 @@ import type { ClubData } from '../domain/types'
 import type { ClubController } from '../hooks/useClubData'
 import { repository } from '../lib/repository'
 import type { DatedTerm } from './DashboardPage'
-import { Box, Button, Card, Checkbox, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, Checkbox, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
 import ArrowBack from '@mui/icons-material/ArrowBack'
 import Calendar from '@mui/icons-material/CalendarMonthOutlined'
 
@@ -91,24 +92,24 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     <Typography sx={{ display: 'flex', alignItems: 'center', gap: .75, mt: .5, mb: 2.5, fontSize: 14, fontWeight: 750, fontStyle: 'italic' }}>
       <Calendar sx={{ fontSize: 16 }} /> <span><time dateTime={term.date}>{openingDate.format(term.startsAt)}</time> · {formatTime(term.start)}–{formatTime(term.end)}</span>
     </Typography>
-    {failure && <p role="alert">{failure}</p>}
+    {failure && <Alert variant="outlined" severity="error" sx={{ mb: 1.5 }}>{failure}</Alert>}
     {serverInstant !== undefined && serverInstant < opening && !session?.cancelled_at &&
-      <p role="status">Prozivka se otvara u {openingTime.format(opening)} ({openingDate.format(opening)}).</p>}
+      <Alert variant="outlined" severity="info" role="status" sx={{ mb: 1.5 }}>Prozivka se otvara u <strong>{openingTime.format(opening)}</strong> ({openingDate.format(opening)}).</Alert>}
     {!session && canStart && <div>
-      {club.saving || club.loading ? <p role="status">Učitavanje spiska treninga…</p> : attempted &&
+      {club.saving || club.loading ? <PendingStatus>Učitavanje spiska treninga…</PendingStatus> : attempted &&
         <Button type="button" variant="outlined" color="secondary" disabled={busy} onClick={() => setAttempted(false)}>Ponovo otvori trening</Button>}
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
       <Typography component="h2" variant="h6">Planirani spisak</Typography>
-      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
+      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <Alert variant="outlined" severity="info" role="status">Nema planiranih upisa.</Alert>}
     </section>}
     {session && <>
-      {session.cancelled_at && <p role="status">Trening je otkazan. Spisak je dostupan samo za pregled.</p>}
-      {session.completed_at && !session.cancelled_at && <p role="status">Prozivka je završena.</p>}
+      {session.cancelled_at && <Alert variant="outlined" severity="error" role="status" sx={{ mb: 1.5 }}>Trening je otkazan. Spisak je dostupan samo za pregled.</Alert>}
+      {session.completed_at && !session.cancelled_at && <Alert variant="outlined" severity="success" role="status" sx={{ mb: 1.5 }}>Prozivka je završena.</Alert>}
       <Chip label={present + ' od ' + rows.length + ' prisutnih'} sx={{ bgcolor: '#eee3c9', fontWeight: 800, mb: 1.5 }} />
       <fieldset disabled={checking || busy || !canStart || !!session.cancelled_at}>
         <Typography component="legend" variant="h6">Spisak prisustva</Typography>
-        {!rows.length && <p role="status">Na spisku nema dece.</p>}
+        {!rows.length && <Alert variant="outlined" severity="info" role="status">Na spisku nema dece.</Alert>}
         {!canStart && rows.length > 0 && <ul className="roll-call-list">{rows.map(row => <li key={row.child_id}>
           <span>{row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''} · {row.present ? 'Prisutan' : 'Odsutan'}</span>{examWarning(row.child_id)}
         </li>)}</ul>}
@@ -126,7 +127,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
           </Card>
         })}</Stack>}
         {presenceDraft && !session.cancelled_at && <Box sx={{ mb: 2 }}>
-          <p role="status">{checking || busy ? 'Provera i čuvanje prisustva…' : 'Izmena prisustva još nije potvrđena. Broj prisutnih prikazuje učitano stanje.'}</p>
+          {checking || busy ? <PendingStatus>Provera i čuvanje prisustva…</PendingStatus> : <Alert variant="outlined" severity="warning" role="status">Izmena prisustva još nije potvrđena. Broj prisutnih prikazuje učitano stanje.</Alert>}
           {canStart && !checking && !busy && <>
             <Button variant="outlined" color="secondary" sx={{ mr: 1 }} onClick={() => void savePresence(presenceDraft.childId, presenceDraft.value)}>Ponovi čuvanje prisustva</Button>
             <Button variant="outlined" color="secondary" onClick={() => setPresenceDraft(null)}>Vrati učitano stanje</Button>
