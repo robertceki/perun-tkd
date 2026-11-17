@@ -29,3 +29,16 @@ input, select, textarea { max-width: 100%; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+:root {
+  --perun-toolbar-height: 60px;
+  --perun-header-height: calc(var(--perun-toolbar-height) + env(safe-area-inset-top, 0px));
+}
+
+@media (min-width: 600px) {
+  :root { --perun-toolbar-height: 64px; }
+}
+
+html:has(.perun-fixed-header) {
+  scroll-padding-top: calc(var(--perun-header-height) + 12px);
+}
