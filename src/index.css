@@ -1,33 +1,31 @@
-:root {
-  --perun-ink: #222229;
-  --perun-gold: #c5a45e;
-  --perun-paper: #faf8f3;
-  --perun-line: #ded9ce;
-  --perun-selected: #f2ebdc;
-  --perun-nav-height: calc(56px + env(safe-area-inset-bottom));
-}
-
 html {
   color-scheme: light;
-  scroll-padding-block: 12px calc(var(--perun-nav-height) + 16px);
+  scroll-padding-block: 12px calc(72px + env(safe-area-inset-bottom));
 }
 
-body {
-  margin: 0;
-  background: var(--perun-paper);
-  color: var(--perun-ink);
-  overflow-wrap: anywhere;
-}
+body { overflow-wrap: anywhere; }
 #root { min-height: 100vh; }
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
 input, select, textarea { max-width: 100%; }
 
+:focus-visible, .MuiButtonBase-root.Mui-focusVisible {
+  outline: 2px solid #85601d;
+  outline-offset: 2px;
+}
 
-.table td, .table th { vertical-align: middle; }
-.card, .container, fieldset { min-width: 0; }
-.text-break { overflow-wrap: anywhere; }
-
-.competitor-form .form-label:has(+ :required)::after,
-.form-label:has(+ select[autocomplete="sex"]:required)::after {
-  content: " *" / "";
-  color: var(--bs-danger-text-emphasis);
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

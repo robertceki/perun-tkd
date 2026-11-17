@@ -1,3 +1,4 @@
+import { Button, Alert } from '@mui/material'
 import type { Child, ClubData, MemberType } from '../domain/types'
 import { ageCategoryLabels, getAgeCategory, liveCompetitionAssignments, matchingWeights, memberTypeLabels } from '../domain/competitorProfile'
 import { formatTime } from '../domain/validation'
@@ -63,16 +64,16 @@ export function CompetitorProfile({ child, previous, data, today, change, openSc
         {weights.map(weight => <option key={weight.id} value={weight.id}>{weight.signed_kg > 0 ? '+' : ''}{weight.signed_kg} kg</option>)}
       </SelectField>
     </>}
-    {(grandfathered || (removingCompetition && (!today || blocking.length > 0))) && <div className="alert alert-warning">
+    {(grandfathered || (removingCompetition && (!today || blocking.length > 0))) && <Alert severity="warning" sx={{ mb: 1.5 }}>
       {grandfathered && <p>Rekreativac ima ranije dodeljenu takmičarsku grupu: {data.groups.find(group => group.id === child.competition_group_id)?.name}.</p>}
       {!!blocking.length && <><p>Završite ili otkažite sledeće takmičarske upise u rasporedu pre uklanjanja grupe:</p>
         <ul>{blocking.map(({ assignment, term, group }) => <li key={term.id + assignment.valid_from}>
           {group.name}, {weekdays[term.weekday - 1]} {formatTime(term.starts_at)}–{formatTime(term.ends_at)}, {assignment.valid_from} – {assignment.valid_to ?? 'bez završetka'}
         </li>)}</ul>
-        <button type="button" className="btn btn-link" onClick={openSchedule}>Otvori raspored</button>
+        <Button type="button" color="secondary" onClick={openSchedule}>Otvori raspored</Button>
       </>}
       {!today && <p>Sačekajte potvrdu današnjeg datuma.</p>}
-      {grandfathered && <button type="button" className="btn btn-outline-secondary" disabled={!today || !!blocking.length} onClick={() => change({ ...child, competition_group_id: null })}>Ukloni takmičarsku grupu</button>}
-    </div>}
+      {grandfathered && <Button type="button" variant="outlined" disabled={!today || !!blocking.length} onClick={() => change({ ...child, competition_group_id: null })}>Ukloni takmičarsku grupu</Button>}
+    </Alert>}
   </>
 }

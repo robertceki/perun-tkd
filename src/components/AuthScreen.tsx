@@ -1,3 +1,4 @@
+import { Box, Button, Card, Stack, Typography } from '@mui/material'
 import { useState, type FormEvent } from 'react'
 import type { useAuth } from '../hooks/useAuth'
 import { Feedback, Field } from './Feedback'
@@ -17,7 +18,13 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
     } else if (reset) await auth.reset(email)
     else await auth.login(email, password)
   }
-  return <main className="container py-5"><div className="row justify-content-center"><div className="col-12 col-md-7 col-lg-5"><div className="perun-brand auth-brand"><img src="/perun-logo.jpg" alt="" width="62" height="62" /><div><h1 className="h3 mb-0">TKD Perun</h1><small>Trening centar Pančevo</small></div></div><div className="card"><div className="card-body"><h2 className="h4">{recovery ? 'Nova lozinka' : reset ? 'Oporavak lozinke' : 'Prijava trenera'}</h2>
+  return <Box component="main" sx={{ maxWidth: 480, mx: 'auto', px: 2, py: { xs: 3, sm: 6 } }}>
+    <Stack direction="row" alignItems="center" gap={1.25} sx={{ bgcolor: 'secondary.main', color: '#efd18b', p: 1.5, borderRadius: '14px', mb: 2 }}>
+      <Box component="img" src="/perun-logo.jpg" alt="" sx={{ width: 38, height: 38, borderRadius: '8px' }} />
+      <Typography component="h1" fontWeight={800}>TKD PERUN</Typography>
+    </Stack>
+    <Card sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography component="h2" variant="h6" fontWeight={750} sx={{ mb: 2 }}>{recovery ? 'Nova lozinka' : reset ? 'Oporavak lozinke' : 'Prijava trenera'}</Typography>
     {!auth.configured && <Feedback errors={['Veza sa servisom nije podešena. Obratite se administratoru.']} />}
     <Feedback errors={[auth.error, error].filter(Boolean)} message={auth.message} />
     {auth.status === 'loading' && !auth.busy && <p role="status">Provera sesije…</p>}
@@ -25,9 +32,9 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
       {!recovery && <Field label="Imejl" type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} />}
       {(!reset || recovery) && <Field label={recovery ? 'Nova lozinka (najmanje 8 znakova)' : 'Lozinka'} type="password" autoComplete={recovery ? 'new-password' : 'current-password'} minLength={recovery ? 8 : undefined} required value={password} onChange={e => setPassword(e.target.value)} />}
       {recovery && <Field label="Ponovite novu lozinku" type="password" autoComplete="new-password" required value={confirmation} onChange={e => setConfirmation(e.target.value)} />}
-      <button type="submit" className="btn btn-primary">{auth.busy ? 'Sačekajte…' : recovery ? 'Sačuvaj lozinku' : reset ? 'Pošalji uputstvo' : 'Prijavi se'}</button>
+      <Button type="submit" variant="contained" fullWidth>{auth.busy ? 'Sačekajte…' : recovery ? 'Sačuvaj lozinku' : reset ? 'Pošalji uputstvo' : 'Prijavi se'}</Button>
     </fieldset></form>
-    <div className="mt-3">{recovery ? <button type="button" disabled={auth.busy} className="btn btn-link px-0" onClick={() => void auth.logout()}>Odustani i odjavi se</button> : <button type="button" disabled={auth.busy} className="btn btn-link px-0" onClick={() => { setReset(!reset); setPassword(''); setError('') }}>{reset ? 'Nazad na prijavu' : 'Zaboravljena lozinka?'}</button>}</div>
-    <p className="text-body-secondary small mb-0">Pristup je namenjen samo ovlašćenim aktivnim trenerima. Nalog obezbeđuje administrator.</p>
-  </div></div></div></div></main>
+    <Box sx={{ mt: 1 }}>{recovery ? <Button type="button" color="secondary" disabled={auth.busy} onClick={() => void auth.logout()}>Odustani i odjavi se</Button> : <Button type="button" color="secondary" disabled={auth.busy} onClick={() => { setReset(!reset); setPassword(''); setError('') }}>{reset ? 'Nazad na prijavu' : 'Zaboravljena lozinka?'}</Button>}</Box>
+    <Typography variant="body2" color="text.secondary">Pristup je namenjen samo ovlašćenim aktivnim trenerima. Nalog obezbeđuje administrator.</Typography>
+  </Card></Box>
 }
