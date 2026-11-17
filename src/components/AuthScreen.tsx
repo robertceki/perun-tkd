@@ -1,7 +1,7 @@
-import { Box, Button, Card, Stack, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, Stack, Typography } from '@mui/material'
 import { useState, type FormEvent } from 'react'
 import type { useAuth } from '../hooks/useAuth'
-import { Feedback, Field } from './Feedback'
+import { PendingStatus, Feedback, Field } from './Feedback'
 
 export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [reset, setReset] = useState(false)
@@ -27,7 +27,7 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
       <Typography component="h2" variant="h6" fontWeight={750} sx={{ mb: 2 }}>{recovery ? 'Nova lozinka' : reset ? 'Oporavak lozinke' : 'Prijava trenera'}</Typography>
     {!auth.configured && <Feedback errors={['Veza sa servisom nije podešena. Obratite se administratoru.']} />}
     <Feedback errors={[auth.error, error].filter(Boolean)} message={auth.message} />
-    {auth.status === 'loading' && !auth.busy && <p role="status">Provera sesije…</p>}
+    {auth.status === 'loading' && !auth.busy && <PendingStatus>Provera sesije…</PendingStatus>}
     <form onSubmit={submit}><fieldset disabled={auth.busy || !auth.configured || auth.status === 'loading'}>
       {!recovery && <Field label="Imejl" type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} />}
       {(!reset || recovery) && <Field label={recovery ? 'Nova lozinka (najmanje 8 znakova)' : 'Lozinka'} type="password" autoComplete={recovery ? 'new-password' : 'current-password'} minLength={recovery ? 8 : undefined} required value={password} onChange={e => setPassword(e.target.value)} />}
@@ -35,6 +35,6 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
       <Button type="submit" variant="contained" fullWidth>{auth.busy ? 'Sačekajte…' : recovery ? 'Sačuvaj lozinku' : reset ? 'Pošalji uputstvo' : 'Prijavi se'}</Button>
     </fieldset></form>
     <Box sx={{ mt: 1 }}>{recovery ? <Button type="button" color="secondary" disabled={auth.busy} onClick={() => void auth.logout()}>Odustani i odjavi se</Button> : <Button type="button" color="secondary" disabled={auth.busy} onClick={() => { setReset(!reset); setPassword(''); setError('') }}>{reset ? 'Nazad na prijavu' : 'Zaboravljena lozinka?'}</Button>}</Box>
-    <Typography variant="body2" color="text.secondary">Pristup je namenjen samo ovlašćenim aktivnim trenerima. Nalog obezbeđuje administrator.</Typography>
+    <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Pristup je namenjen samo ovlašćenim aktivnim trenerima. Nalog obezbeđuje administrator.</Alert>
   </Card></Box>
 }

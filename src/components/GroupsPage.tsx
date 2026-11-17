@@ -1,4 +1,4 @@
-import { Typography, Box, Button } from '@mui/material'
+import { Alert, Typography, Box, Button } from '@mui/material'
 import { SettingsDetail } from './SettingsDetail'
 import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
@@ -20,7 +20,7 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
   if (draft) {
     const members = data.children.filter(child => child.main_group_id === draft.id || child.competition_group_id === draft.id)
     return <>
-    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Typography variant="body2" color="text.secondary">Vrsta je zaključana jer grupa ima povezane podatke.</Typography>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
+    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Vrsta je zaključana jer grupa ima povezane podatke.</Alert>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
       {members.length > 0 && <Box component="section" sx={{ mt: 1.5 }}>
         <Typography component="h3" variant="subtitle1">Članovi ({members.length}, aktivni: {members.filter(child => child.status === 'active').length})</Typography>
         <ul>{members.map(child => <li key={child.id}>{child.first_name} {child.last_name}{child.status === 'inactive' ? ' — neaktivan' : ''}</li>)}</ul>
@@ -29,8 +29,8 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
   </>
   }
 
-  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Grupe</Typography><p>Deaktivacija čuva članove, termine i istoriju. Vrsta povezane grupe ne može se menjati.</p><Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), name: '', kind: 'main', active: true })}>Dodaj grupu</Button>
-    {!data.groups.length ? <p role="status">Nema grupa. Najpre dodajte glavnu grupu.</p> :
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Grupe</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Deaktivacija čuva članove, termine i istoriju. Vrsta povezane grupe ne može se menjati.</Alert><Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), name: '', kind: 'main', active: true })}>Dodaj grupu</Button>
+    {!data.groups.length ? <Alert variant="outlined" severity="info" role="status">Nema grupa. Najpre dodajte glavnu grupu.</Alert> :
       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }} aria-label="Spisak grupa">{data.groups.map(group => {
         const members = data.children.filter(child => child.main_group_id === group.id || child.competition_group_id === group.id)
         return <li key={group.id}>
