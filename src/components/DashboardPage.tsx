@@ -1,4 +1,4 @@
-import { Box, ButtonBase, Card, Stack, Typography } from '@mui/material'
+import { Alert, Box, ButtonBase, Card, Stack, Typography } from '@mui/material'
 import ChevronRight from '@mui/icons-material/ChevronRight'
 import { formatTime } from '../domain/validation'
 import type { TrainingSession } from '../domain/types'
@@ -14,7 +14,7 @@ export interface DatedTerm {
 }
 
 export function TermList({ terms, open, selected, counts, next }: { terms: DatedTerm[]; open: (term: DatedTerm) => void; selected: DatedTerm | null; counts: Record<string, number>; next?: string }) {
-  if (!terms.length) return <Typography role="status" sx={{ fontStyle: 'italic' }}>Nema termina za izabrani datum.</Typography>
+  if (!terms.length) return <Alert variant="outlined" severity="info" role="status" sx={{ fontStyle: 'italic' }}>Nema termina za izabrani datum.</Alert>
   return <Stack component="ul" spacing={1.25} sx={{ p: 0, m: 0, listStyle: 'none' }}>{terms.map(term => {
     const active = selected?.termId === term.termId && selected.date === term.date
     const count = counts[term.termId] ?? 0

@@ -1,4 +1,4 @@
-import { Typography, Box, Button } from '@mui/material'
+import { Alert, Typography, Box, Button } from '@mui/material'
 import { SettingsDetail } from './SettingsDetail'
 import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
@@ -30,10 +30,10 @@ export function ContactsPage({ data, club }: { data: ClubData; club: ClubControl
     </fieldset></form></SettingsDetail>
   </>
 
-  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Kontakti</Typography><p>Jedan kontakt možete povezati sa više dece. Za braću i sestre izaberite postojeći kontakt.</p>
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Kontakti</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Jedan kontakt možete povezati sa više dece. Za braću i sestre izaberite postojeći kontakt.</Alert>
     <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', phone: '', email: null, address: null })}>Dodaj kontakt</Button>
     <Field label="Pretraži kontakte po imenu, telefonu ili imejlu" type="search" value={query} onChange={e => setQuery(e.target.value)} />
-    {!list.length ? <p role="status">Nema kontakata koji odgovaraju pretrazi.</p> :
+    {!list.length ? <Alert variant="outlined" severity="info" role="status">Nema kontakata koji odgovaraju pretrazi.</Alert> :
       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }} aria-label="Spisak roditelja i staratelja">
         {list.map(contact => {
           const children = data.childContacts.filter(link => link.contact_id === contact.id)

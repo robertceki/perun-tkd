@@ -46,7 +46,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
     .filter(({ child: c, medicalExam }) => (memberType === 'all' || (c.member_type ?? 'recreational') === memberType) && (!medicalWarningOnly || isMedicalExamWarning(medicalExam.status)) && `${c.first_name} ${c.last_name}`.toLocaleLowerCase('sr-Latn').includes(query.toLocaleLowerCase('sr-Latn')) && (status === 'all' || c.status === status) && (!group || c.main_group_id === group || c.competition_group_id === group))
   if (draft) return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na spisak dece" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi dete' : 'Novo dete'}</Typography><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
-      {draft.member_type === 'competitor' && <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Polja označena zvezdicom (*) su obavezna. Potreban je jedan glavni kontakt.</Typography>}
+      {draft.member_type === 'competitor' && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Polja označena zvezdicom (*) su obavezna. Potreban je jedan glavni kontakt.</Alert>}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Ime deteta" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} /><Field label="Prezime deteta" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} /></Box>
       <CompetitorProfile child={draft} previous={previous} data={data} today={today} change={setDraft} openSchedule={openSchedule ?? (() => navigate('Termini'))} />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
@@ -69,7 +69,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
       </Box>
       <SelectField label="Status deteta" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Child['status'] })}><option value="active">Aktivno</option><option value="inactive">Neaktivno</option></SelectField>
       <SelectField label="Glavna grupa" required value={draft.main_group_id} onChange={e => setDraft({ ...draft, main_group_id: e.target.value })}><option value="">Izaberite glavnu grupu</option>{data.groups.filter(g => g.kind === 'main' && (g.active || g.id === previous?.main_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>
-      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Kontakti deteta</Typography><p>Izaberite postojeće kontakte, odnos i tačno jedan glavni kontakt.</p>
+      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Kontakti deteta</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Izaberite postojeće kontakte, odnos i tačno jedan glavni kontakt.</Alert>
         {links.map((link, index) => <Box key={index} sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1.5, pb: 1.5 }}>
           <SelectField label={`Kontakt ${index + 1}`} required value={link.contact_id} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, contact_id: e.target.value } : item))}><option value="">Izaberite kontakt</option>{data.contacts.filter(c => c.id === link.contact_id || !links.some(item => item.contact_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name} — {c.phone}</option>)}</SelectField>
           <Field label={`Odnos kontakta ${index + 1} sa detetom`} required placeholder="Npr. majka, otac, staratelj" value={link.relationship} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, relationship: e.target.value } : item))} />
@@ -82,7 +82,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
   </>
 
   return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Deca</Typography>
-    {!ready && <Alert severity="info" sx={{ mb: 1.5 }}>Za novo dete potrebni su aktivna glavna grupa i kontakt. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button><Button type="button" color="secondary" onClick={() => navigate('Kontakti')}>Otvori kontakte</Button></Alert>}
+    {!ready && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Za novo dete potrebni su aktivna glavna grupa i kontakt. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button><Button type="button" color="secondary" onClick={() => navigate('Kontakti')}>Otvori kontakte</Button></Alert>}
     <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', address: '', belt: '', status: 'active', main_group_id: '', competition_group_id: null })}>Dodaj dete</Button>
 
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
@@ -110,7 +110,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         }}>Poništi filtere</Button>}
       </Box>
     </Box>
-    {!list.length ? <p role="status">Nema dece koja odgovaraju izabranim filterima.</p> : <>
+    {!list.length ? <Alert variant="outlined" severity="info" role="status">Nema dece koja odgovaraju izabranim filterima.</Alert> : <>
       <Box component="ul" sx={{ listStyle: 'none', p: 0, mb: 1 }} aria-label="Spisak dece">
         {list.map(({ child, medicalExam }) => <li key={child.id}>
           <DirectoryCard disabled={club.busy}

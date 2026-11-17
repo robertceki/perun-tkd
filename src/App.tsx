@@ -8,7 +8,7 @@ import { AuthScreen } from './components/AuthScreen'
 import { AttendancePage } from './components/AttendancePage'
 import { TermList, type DatedTerm } from './components/DashboardPage'
 import { SettingsPage, type SettingsTab } from './components/SettingsPage'
-import { Feedback, Field } from './components/Feedback'
+import { PendingStatus, Feedback, Field } from './components/Feedback'
 import { belgradeBusinessDate } from './domain/validation'
 import type { ClubData } from './domain/types'
 import { repository } from './lib/repository'
@@ -168,11 +168,11 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   ]))
   return <AppShell page={page} navigate={navigate} trainer={trainer} busy={club.saving || authBusy} logout={logout}>
     <Feedback errors={[authError, club.error].filter(Boolean)} message={club.notice} />
-    {club.loading && <p role="status">Učitavanje podataka…</p>}
-    {club.saving && <p role="status">Obrada zahteva…</p>}
+    {club.loading && <PendingStatus>Učitavanje podataka…</PendingStatus>}
+    {club.saving && <PendingStatus>Obrada zahteva…</PendingStatus>}
     {club.error && <Button type="button" variant="outlined" sx={{ mb: 2 }} disabled={club.loading || club.saving} onClick={() => void club.reload()}>Ponovo učitaj podatke</Button>}
     {clock.error && <Alert severity="warning" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => void clock.refresh()}>Ponovo proveri vreme</Button>}>Serversko vreme nije dostupno.</Alert>}
-    {clock.instant === undefined && !clock.error && <p role="status">Provera serverskog vremena…</p>}
+    {clock.instant === undefined && !clock.error && <PendingStatus>Provera serverskog vremena…</PendingStatus>}
     {data && <>
       <div className="term-layout">
         <div ref={termList} className={selected ? 'term-list-pane term-list-selected' : 'term-list-pane'} hidden={page === 'Podešavanja'}>
