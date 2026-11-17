@@ -35,7 +35,7 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
         const members = data.children.filter(child => child.main_group_id === group.id || child.competition_group_id === group.id)
         return <li key={group.id}>
           <DirectoryCard disabled={club.busy} onClick={() => edit(group)} label={`Uredi grupu ${group.name}`}>
-            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
+            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
               <span role="heading" aria-level={2}><strong>{group.name}</strong></span>
               <small>{group.kind === 'main' ? 'Glavna' : 'Takmičarska'} · {group.active ? 'Aktivna' : 'Neaktivna'} · Članovi: {members.length}</small></Box>
           </DirectoryCard>

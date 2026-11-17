@@ -21,11 +21,11 @@ export function SettingsPage({ tab, select, data, club, navigate, today }: {
     <Stack direction="row" spacing={1} role="group" aria-label="Podešavanja"
       sx={{ overflowX: 'auto', scrollbarWidth: 'none', mb: 1, pb: 1 }}>
       {tabs.map(({ id, label }) => <ButtonBase key={id} aria-current={tab === id ? 'page' : undefined}
-        onClick={() => select(id)} sx={{ flexShrink: 0, minHeight: 48, borderRadius: 6,
+        onClick={() => select(id)} sx={{ flexShrink: 0, minWidth: 44, minHeight: 48, borderRadius: 6,
           '&.Mui-focusVisible span': { outline: '2px solid #222229', outlineOffset: 2 } }}>
         <Box component="span" sx={{ display: 'grid', placeItems: 'center', minHeight: 30, px: 1.25, borderRadius: 6,
           border: '1px solid', borderColor: tab === id ? 'primary.main' : '#ded6c7', bgcolor: tab === id ? 'primary.main' : 'background.paper',
-          fontSize: '.8125rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</Box>
+          fontSize: { xs: '.9375rem', sm: '.8125rem' }, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</Box>
       </ButtonBase>)}
     </Stack>
     <div hidden={tab !== 'Deca'}><ChildrenPage data={data} club={club} navigate={navigate} today={today} openSchedule={() => select('Raspored')} /></div>

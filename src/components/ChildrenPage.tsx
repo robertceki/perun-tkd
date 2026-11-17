@@ -115,7 +115,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         {list.map(({ child, medicalExam }) => <li key={child.id}>
           <DirectoryCard disabled={club.busy}
             onClick={() => edit(child)} label={`Uredi dete ${child.first_name} ${child.last_name}`}>
-            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
+            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
               <strong>{child.first_name} {child.last_name}</strong>
               <small>{data.groups.find(group => group.id === child.main_group_id)?.name}</small></Box>
             <MedicalExamStatus details={medicalExam} warningsOnly />
