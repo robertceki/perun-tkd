@@ -1,3 +1,6 @@
+import { Typography, Box, Button } from '@mui/material'
+import { SettingsDetail } from './SettingsDetail'
+import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
 import type { ClubData, Contact } from '../domain/types'
 import { validateContact } from '../domain/validation'
@@ -17,37 +20,33 @@ export function ContactsPage({ data, club }: { data: ClubData; club: ClubControl
   }
   const list = data.contacts.filter(contact => `${contact.first_name} ${contact.last_name} ${contact.phone} ${contact.email ?? ''}`.toLocaleLowerCase('sr-Latn').includes(query.toLocaleLowerCase('sr-Latn')))
   if (draft) return <>
-    <button type="button" className="btn btn-link px-0 mb-2" disabled={club.busy} onClick={() => setDraft(null)}>‹ Nazad na spisak kontakata</button>
-    <section className="card mb-4"><div className="card-body"><h2 className="h4">{data.contacts.some(c => c.id === draft.id) ? 'Uredi kontakt' : 'Novi kontakt'}</h2><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
+    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak kontakata" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{data.contacts.some(c => c.id === draft.id) ? 'Uredi kontakt' : 'Novi kontakt'}</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
       <Field label="Ime" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} />
       <Field label="Prezime" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} />
       <Field label="Telefon" type="tel" autoComplete="tel" required value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
       <Field label="Imejl (opciono)" type="email" autoComplete="email" value={draft.email ?? ''} onChange={e => setDraft({ ...draft, email: e.target.value })} />
       <Field label="Adresa (opciono)" autoComplete="street-address" value={draft.address ?? ''} onChange={e => setDraft({ ...draft, address: e.target.value })} />
       <FormActions busy={club.busy} cancel={() => setDraft(null)} />
-    </fieldset></form></div></section>
+    </fieldset></form></SettingsDetail>
   </>
 
-  return <><h1 className="h3">Kontakti</h1><p>Jedan kontakt možete povezati sa više dece. Za braću i sestre izaberite postojeći kontakt.</p>
-    <button type="button" className="btn btn-primary mb-3" disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', phone: '', email: null, address: null })}>Dodaj kontakt</button>
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Kontakti</Typography><p>Jedan kontakt možete povezati sa više dece. Za braću i sestre izaberite postojeći kontakt.</p>
+    <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', phone: '', email: null, address: null })}>Dodaj kontakt</Button>
     <Field label="Pretraži kontakte po imenu, telefonu ili imejlu" type="search" value={query} onChange={e => setQuery(e.target.value)} />
     {!list.length ? <p role="status">Nema kontakata koji odgovaraju pretrazi.</p> :
-      <ul className="list-unstyled mb-0" aria-label="Spisak roditelja i staratelja">
+      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }} aria-label="Spisak roditelja i staratelja">
         {list.map(contact => {
           const children = data.childContacts.filter(link => link.contact_id === contact.id)
             .map(link => data.children.find(child => child.id === link.child_id))
             .filter(child => child !== undefined)
           return <li key={contact.id}>
-            <button type="button" className="child-directory-row" disabled={club.busy} onClick={() => edit(contact)}
-              aria-label={`Uredi kontakt ${contact.first_name} ${contact.last_name}`}>
-              <span className="child-directory-info">
+            <DirectoryCard disabled={club.busy} onClick={() => edit(contact)}
+              label={`Uredi kontakt ${contact.first_name} ${contact.last_name}`}>
+              <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
                 <strong>{contact.first_name} {contact.last_name}</strong>
-                <small>{children.length ? children.map(child => child.first_name + ' ' + child.last_name).join(', ') : 'Nema povezane dece'}</small>
-              </span>
-              <span aria-hidden="true">›</span>
-            </button>
+                <small>{children.length ? children.map(child => child.first_name + ' ' + child.last_name).join(', ') : 'Nema povezane dece'}</small></Box>
+          </DirectoryCard>
           </li>
-        })}
-      </ul>}
+        })}</Box>}
   </>
 }

@@ -1,3 +1,4 @@
+import { Alert, Box, Button, ButtonBase, Stack, Typography } from '@mui/material'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import { useAuth } from './hooks/useAuth'
@@ -143,7 +144,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
 
   function closeTerm() {
     const list = termList.current
-    const target = list?.querySelector<HTMLElement>('.term-button[aria-pressed="true"]:not([hidden] .term-button)')
+    const target = list?.querySelector<HTMLElement>('.mui-term-button[aria-pressed="true"]:not([hidden] .mui-term-button)')
       ?? list?.querySelector<HTMLElement>('h1:not([hidden] h1)')
     setSelected(null)
     window.requestAnimationFrame(() => target?.focus())
@@ -157,37 +158,53 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
     setSelected(null)
   }
 
+  const todayTerms = data && today ? datedTerms(data, today, today) : []
+  const now = clock.lastInstant
+  const next = now === undefined ? undefined : todayTerms.find(term => term.startsAt >= now && !term.session?.cancelled_at)?.termId
+  const counts = (terms: DatedTerm[]) => Object.fromEntries(terms.map(term => [term.termId,
+    term.session ? (data?.attendance ?? []).filter(row => row.session_id === term.session?.id).length
+      : new Set(data?.assignments.filter(row => row.term_id === term.termId && row.valid_from <= term.date &&
+        (!row.valid_to || row.valid_to >= term.date) && (!row.cancelled_at || Date.parse(row.cancelled_at) > term.startsAt)).map(row => row.child_id)).size,
+  ]))
   return <AppShell page={page} navigate={navigate} trainer={trainer} busy={club.saving || authBusy} logout={logout}>
     <Feedback errors={[authError, club.error].filter(Boolean)} message={club.notice} />
     {club.loading && <p role="status">Učitavanje podataka…</p>}
     {club.saving && <p role="status">Obrada zahteva…</p>}
-    {club.error && <button type="button" className="btn btn-outline-primary mb-3" disabled={club.loading || club.saving} onClick={() => void club.reload()}>Ponovo učitaj podatke</button>}
-    {clock.error && <div className="alert alert-warning" role="alert">Serversko vreme nije dostupno. <button type="button" className="btn btn-outline-secondary" onClick={() => void clock.refresh()}>Ponovo proveri vreme</button></div>}
+    {club.error && <Button type="button" variant="outlined" sx={{ mb: 2 }} disabled={club.loading || club.saving} onClick={() => void club.reload()}>Ponovo učitaj podatke</Button>}
+    {clock.error && <Alert severity="warning" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => void clock.refresh()}>Ponovo proveri vreme</Button>}>Serversko vreme nije dostupno.</Alert>}
     {clock.instant === undefined && !clock.error && <p role="status">Provera serverskog vremena…</p>}
     {data && <>
       <div className="term-layout">
         <div ref={termList} className={selected ? 'term-list-pane term-list-selected' : 'term-list-pane'} hidden={page === 'Podešavanja'}>
           <div hidden={page !== 'Početna'}>
-            <h1 tabIndex={-1} className="h3">Današnji termini</h1>
-            {today && <><p>{today}</p><TermList terms={datedTerms(data, today, today)} open={setSelected} selected={selected} /></>}
+            <Typography component="h1" tabIndex={-1} variant="h4" sx={{ mb: 2.5, fontSize: { xs: "1.8rem", sm: "2.2rem" } }}>Današnji termini</Typography>
+            {today && <TermList terms={todayTerms} open={setSelected} selected={selected} counts={counts(todayTerms)} next={next} />}
           </div>
           <div hidden={page !== 'Termini'}>
-            <h1 tabIndex={-1} className="h3">Termini</h1>
+            <Typography component="h1" tabIndex={-1} variant="h4" sx={{ mb: 2.5, fontSize: { xs: "1.8rem", sm: "2.2rem" } }}>Termini</Typography>
             <Field label="Datum" type="date" min="0001-01-07" max="9999-12-24" value={currentDate} onChange={event => {
               if (!event.target.value || event.target.validity.valid) setDate(event.target.value)
             }} />
-            <div className="d-flex flex-wrap gap-2 mb-3">
-              <button type="button" className="btn btn-outline-primary" aria-pressed={!week} onClick={() => setWeek(false)}>Dan</button>
-              <button type="button" className="btn btn-outline-primary" aria-pressed={week} onClick={() => setWeek(true)}>Nedelja</button>
-            </div>
-            {days.map(day => <section key={day}><h2 className="h5">{day}</h2><TermList terms={datedTerms(data, day, today)} open={setSelected} selected={selected} /></section>)}
+            {currentDate && <Stack direction="row" gap={1} role="group" aria-label="Dani" sx={{ overflowX: 'auto', scrollbarWidth: 'none', mb: 2 }}>
+              {['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned', 'Svi dani'].map((label, index) => {
+                const day = index === 7 ? currentDate : moveDate(currentDate, index + 1 - weekday(currentDate))
+                const active = index === 7 ? week : !week && day === currentDate
+                return <ButtonBase key={label} aria-pressed={active} onClick={() => { setWeek(index === 7); setDate(day) }} sx={{ flexShrink: 0, minHeight: 48, '&.Mui-focusVisible span': { outline: '2px solid', outlineOffset: 2 } }}>
+                  <Box component="span" sx={{ display: 'grid', placeItems: 'center', minHeight: 30, px: 1.25, border: '1px solid', borderColor: active ? 'primary.main' : '#ded6c7', bgcolor: active ? 'primary.main' : 'background.paper', borderRadius: '24px', fontSize: '.8125rem', fontWeight: 700 }}>{label}</Box>
+                </ButtonBase>
+              })}
+            </Stack>}
+            {days.map(day => {
+              const terms = datedTerms(data, day, today)
+              return <Box component="section" key={day} sx={{ mb: 2 }}>{week && <Typography component="h2" fontWeight={800}>{day}</Typography>}<TermList terms={terms} open={setSelected} selected={selected} counts={counts(terms)} /></Box>
+            })}
           </div>
         </div>
         {selected && activeTerm && <AttendancePage key={selected.date + '/' + selected.termId} term={activeTerm}
           data={data} club={club} opening={activeTerm.startsAt - rollCallLeadTime}
           serverInstant={clock.instant} today={clock.error ? '' : today} authBusy={authBusy}
           verifyBoundary={clock.verifyBoundary} back={closeTerm} />}
-        {selected && !activeTerm && <p role="alert">Termin više nije dostupan. <button type="button" className="btn btn-link" onClick={closeTerm}>Nazad na termine</button></p>}
+        {selected && !activeTerm && <Alert severity="warning" action={<Button color="inherit" onClick={closeTerm}>Nazad na termine</Button>}>Termin više nije dostupan.</Alert>}
       </div>
       <div hidden={page !== 'Podešavanja'}><SettingsPage tab={tab} select={setTab} data={data} club={club} navigate={navigate} today={clock.error ? '' : today} /></div>
     </>}

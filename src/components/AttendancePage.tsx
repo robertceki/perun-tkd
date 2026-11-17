@@ -7,7 +7,9 @@ import type { ClubData } from '../domain/types'
 import type { ClubController } from '../hooks/useClubData'
 import { repository } from '../lib/repository'
 import type { DatedTerm } from './DashboardPage'
-import { Check, SelectField } from './Feedback'
+import { Box, Button, Card, Checkbox, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
+import ArrowBack from '@mui/icons-material/ArrowBack'
+import Calendar from '@mui/icons-material/CalendarMonthOutlined'
 
 const openingTime = new Intl.DateTimeFormat('sr-Latn-RS', {
   timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
@@ -25,6 +27,8 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
   useEffect(() => heading.current?.focus(), [])
   const [presenceDraft, setPresenceDraft] = useState<{ childId: string; value: boolean } | null>(null)
   const [substitute, setSubstitute] = useState('')
+  const [substituteOpen, setSubstituteOpen] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
   const [attempted, setAttempted] = useState(false)
   const [checking, setChecking] = useState(false)
   const [failure, setFailure] = useState('')
@@ -81,60 +85,89 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     if (await change(() => repository!.setPresence(session.id, childId, value)) === 'saved') setPresenceDraft(null)
   }
 
-  return <section className="roll-call" aria-busy={checking || club.saving}>
-    <button type="button" className="btn btn-outline-secondary mb-3" onClick={back}>Nazad na termine</button>
-    <h1 ref={heading} tabIndex={-1} className="h3">{term.group} · {formatTime(term.start)}–{formatTime(term.end)}</h1>
-    <p>{term.date}</p>
+  return <Box component="section" sx={{ minWidth: 0 }} aria-busy={checking || club.saving}>
+    <Button color="secondary" startIcon={<ArrowBack />} onClick={back}>Nazad na termine</Button>
+    <Typography ref={heading} tabIndex={-1} component="h1" variant="h4" sx={{ fontSize: { xs: '1.8rem', sm: '2.2rem' } }}>{term.group}</Typography>
+    <Typography sx={{ display: 'flex', alignItems: 'center', gap: .75, mt: .5, mb: 2.5, fontSize: 14, fontWeight: 750, fontStyle: 'italic' }}>
+      <Calendar sx={{ fontSize: 16 }} /> <span><time dateTime={term.date}>{openingDate.format(term.startsAt)}</time> · {formatTime(term.start)}–{formatTime(term.end)}</span>
+    </Typography>
     {failure && <p role="alert">{failure}</p>}
     {serverInstant !== undefined && serverInstant < opening && !session?.cancelled_at &&
       <p role="status">Prozivka se otvara u {openingTime.format(opening)} ({openingDate.format(opening)}).</p>}
     {!session && canStart && <div>
       {club.saving || club.loading ? <p role="status">Učitavanje spiska treninga…</p> : attempted &&
-        <button type="button" className="btn btn-outline-primary" disabled={busy} onClick={() => setAttempted(false)}>Ponovo otvori trening</button>}
+        <Button type="button" variant="outlined" color="secondary" disabled={busy} onClick={() => setAttempted(false)}>Ponovo otvori trening</Button>}
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
-      <h2 className="h5">Planirani spisak</h2>
+      <Typography component="h2" variant="h6">Planirani spisak</Typography>
       {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <p>Nema planiranih upisa.</p>}
     </section>}
     {session && <>
       {session.cancelled_at && <p role="status">Trening je otkazan. Spisak je dostupan samo za pregled.</p>}
       {session.completed_at && !session.cancelled_at && <p role="status">Prozivka je završena.</p>}
-      <p>Prisutno: {present} · Odsutno: {rows.length - present} · Ukupno: {rows.length}</p>
+      <Chip label={present + ' od ' + rows.length + ' prisutnih'} sx={{ bgcolor: '#eee3c9', fontWeight: 800, mb: 1.5 }} />
       <fieldset disabled={checking || busy || !canStart || !!session.cancelled_at}>
-        <legend className="h5">Spisak prisustva</legend>
+        <Typography component="legend" variant="h6">Spisak prisustva</Typography>
         {!rows.length && <p role="status">Na spisku nema dece.</p>}
         {!canStart && rows.length > 0 && <ul className="roll-call-list">{rows.map(row => <li key={row.child_id}>
           <span>{row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''} · {row.present ? 'Prisutan' : 'Odsutan'}</span>{examWarning(row.child_id)}
         </li>)}</ul>}
-        {canStart && rows.map(row => <div key={row.child_id} className="roll-call-row"><Check
-          label={row.child_first_name + ' ' + row.child_last_name + (row.is_substitute ? ' (zamena)' : '')}
-          checked={presenceDraft?.childId === row.child_id && !session.cancelled_at ? presenceDraft.value : row.present}
-          disabled={!!presenceDraft && presenceDraft.childId !== row.child_id}
-          onChange={event => void savePresence(row.child_id, event.currentTarget.checked)} />{examWarning(row.child_id)}</div>)}
-        {presenceDraft && !session.cancelled_at && <div className="mb-3">
+        {canStart && <Stack spacing={1.25}>{rows.map(row => {
+          const checked = presenceDraft?.childId === row.child_id && !session.cancelled_at ? presenceDraft.value : row.present
+          const name = row.child_first_name + ' ' + row.child_last_name + (row.is_substitute ? ' (zamena)' : '')
+          return <Card key={row.child_id} sx={{ bgcolor: checked ? '#f0f4eb' : 'background.paper' }}>
+            <Box component="label" sx={{ display: 'flex', alignItems: 'center', gap: .5, minHeight: 46, px: .75, py: .25, cursor: 'pointer' }}>
+              <Checkbox size="small" color="secondary" checked={checked} slotProps={{ input: { "aria-label": name } }} sx={{ p: .5, '& svg': { fontSize: 18 } }}
+                disabled={checking || busy || !!session.cancelled_at || (!!presenceDraft && presenceDraft.childId !== row.child_id)}
+                onChange={event => void savePresence(row.child_id, event.target.checked)} />
+              <Typography fontWeight={650} sx={{ flex: 1 }}>{name}</Typography>
+              {examWarning(row.child_id)}
+            </Box>
+          </Card>
+        })}</Stack>}
+        {presenceDraft && !session.cancelled_at && <Box sx={{ mb: 2 }}>
           <p role="status">{checking || busy ? 'Provera i čuvanje prisustva…' : 'Izmena prisustva još nije potvrđena. Broj prisutnih prikazuje učitano stanje.'}</p>
           {canStart && !checking && !busy && <>
-            <button type="button" className="btn btn-outline-primary me-2" onClick={() => void savePresence(presenceDraft.childId, presenceDraft.value)}>Ponovi čuvanje prisustva</button>
-            <button type="button" className="btn btn-outline-secondary" onClick={() => setPresenceDraft(null)}>Vrati učitano stanje</button>
+            <Button variant="outlined" color="secondary" sx={{ mr: 1 }} onClick={() => void savePresence(presenceDraft.childId, presenceDraft.value)}>Ponovi čuvanje prisustva</Button>
+            <Button variant="outlined" color="secondary" onClick={() => setPresenceDraft(null)}>Vrati učitano stanje</Button>
           </>}
-        </div>}
+        </Box>}
         {canStart && !session.cancelled_at && <>
-          <SelectField label="Dete za zamenu" value={substitute} onChange={event => setSubstitute(event.target.value)}>
-            <option value="">Izaberite dete</option>
-            {options.map(child => <option key={child.id} value={child.id}>{child.first_name} {child.last_name}</option>)}
-          </SelectField>
-          <div className="d-flex flex-wrap gap-2">
-            <button type="button" className="btn btn-outline-primary" disabled={!!presenceDraft || !options.some(child => child.id === substitute)} onClick={async () => {
-              if (await change(() => repository!.addSubstitute(session.id, substitute)) === 'saved') setSubstitute('')
-            }}>Dodaj zamenu</button>
-            {!session.completed_at && <button type="button" className="btn btn-primary" disabled={!!presenceDraft} onClick={() => void change(() => repository!.completeSession(session.id))}>Završi prozivku</button>}
-            {canCancel && <button type="button" className="btn btn-outline-danger" disabled={!!presenceDraft} onClick={() => { if (window.confirm('Otkazivanje zaključava spisak prisustva. Otkaži trening?')) void change(() => repository!.cancelSession(session.id), true) }}>Otkaži trening</button>}
-          </div>
+          <Stack direction="row" useFlexGap flexWrap="wrap" gap={1} mt={2}>
+            {!session.completed_at && <Button variant="contained" disabled={busy || checking || !!presenceDraft} onClick={() => void change(() => repository!.completeSession(session.id))}>Završi prozivku</Button>}
+            <Button variant="outlined" color="secondary" disabled={busy || checking || !!presenceDraft} aria-expanded={substituteOpen} onClick={() => setSubstituteOpen(!substituteOpen)}>Dodaj zamenu</Button>
+            {canCancel && <Button color="error" aria-label="Otkaži trening" sx={{ ml: 'auto' }} disabled={busy || checking || !!presenceDraft} onClick={() => setConfirmCancel(true)}>Otkaži</Button>}
+          </Stack>
+          {substituteOpen && <Card sx={{ p: { xs: 2, sm: 3 }, mt: 1.5 }}>
+            <Stack spacing={1.25} component="form" onSubmit={async event => {
+              event.preventDefault()
+              if (presenceDraft || !options.some(child => child.id === substitute)) return
+              if (await change(() => repository!.addSubstitute(session.id, substitute)) === 'saved') {
+                setSubstitute('')
+                setSubstituteOpen(false)
+              }
+            }}>
+              <Typography component="h2" variant="h6" fontWeight={750}>Zamena</Typography>
+              <TextField select label="Dete" value={substitute} onChange={event => setSubstitute(event.target.value)}
+                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
+                <option value="">Izaberite dete</option>
+                {options.map(child => <option key={child.id} value={child.id}>{child.first_name} {child.last_name}</option>)}
+              </TextField>
+              <Button variant="contained" type="submit" disabled={busy || checking || !!presenceDraft || !options.some(child => child.id === substitute)}>Dodaj</Button>
+            </Stack>
+          </Card>}
+          <Dialog open={confirmCancel} onClose={() => setConfirmCancel(false)} fullWidth maxWidth="xs" aria-labelledby="cancel-training-title">
+            <DialogTitle id="cancel-training-title">Otkaži trening?</DialogTitle>
+            <DialogContent>Prozivka će ostati zaključana za izmene.</DialogContent>
+            <DialogActions>
+              <Button color="secondary" autoFocus onClick={() => setConfirmCancel(false)}>Nazad</Button>
+              <Button color="error" disabled={busy || checking || !!presenceDraft || !canCancel} onClick={async () => {
+                if (await change(() => repository!.cancelSession(session.id), true) === 'saved') setConfirmCancel(false)
+              }}>Otkaži</Button>
+            </DialogActions>
+          </Dialog>
         </>}
       </fieldset>
     </>}
-  </section>
+  </Box>
 }
-
-
-

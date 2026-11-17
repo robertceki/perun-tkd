@@ -1,32 +1,31 @@
 import type { ReactNode } from 'react'
+import { AppBar, BottomNavigation, BottomNavigationAction, Box, Button, Toolbar, Typography } from '@mui/material'
+import Home from '@mui/icons-material/HomeOutlined'
+import Calendar from '@mui/icons-material/CalendarMonthOutlined'
+import Settings from '@mui/icons-material/TuneOutlined'
 
 export type Page = 'Početna' | 'Termini' | 'Podešavanja' | 'Deca' | 'Kontakti' | 'Grupe'
 const pages = [
-  { label: 'Početna', path: 'm3 10 9-7 9 7v10h-6v-6H9v6H3z' },
-  { label: 'Termini', path: 'M3 5h18v16H3zM7 3v4m10-4v4M3 10h18m-14 5h3m4 0h3' },
-  { label: 'Podešavanja', path: 'M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-6 2v4' },
+  { label: 'Početna', icon: <Home /> },
+  { label: 'Termini', icon: <Calendar /> },
+  { label: 'Podešavanja', icon: <Settings /> },
 ] as const
 
-export function AppShell({ page, navigate, trainer, busy, logout, children }: { page: Page; navigate: (page: Page) => void; trainer: string; busy: boolean; logout: () => void; children: ReactNode }) {
+export function AppShell({ page, navigate, busy, logout, children }: { page: Page; navigate: (page: Page) => void; trainer: string; busy: boolean; logout: () => void; children: ReactNode }) {
   return <>
-    <header className="perun-header">
-      <div className="container py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div className="perun-brand">
-          <img src="/perun-logo.jpg" alt="" width="62" height="62" />
-          <div><strong>TKD Perun</strong><small>Trening centar Pančevo</small></div>
-        </div>
-        <div className="d-flex align-items-center gap-2 flex-wrap">
-          <span className="text-break">{trainer}</span>
-          <button type="button" className="btn perun-logout" disabled={busy} onClick={logout}>Odjavi se</button>
-        </div>
-      </div>
-    </header>
-    <main className="container perun-main">{children}</main>
-    <nav className="perun-nav" aria-label="Glavna navigacija">
-      {pages.map(({ label, path }) => <button key={label} type="button" aria-current={page === label ? 'page' : undefined} disabled={busy} onClick={() => navigate(label)}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d={path} /></svg>
-        <span>{label}</span>
-      </button>)}
-    </nav>
+    <AppBar position="static" elevation={0} color="secondary" sx={{ pt: 'env(safe-area-inset-top)', color: '#fff' }}>
+      <Toolbar sx={{ gap: 1.25, minHeight: 60 }}>
+        <Box component="img" src="/perun-logo.jpg" alt="" sx={{ width: 38, height: 38, borderRadius: '8px' }} />
+        <Typography sx={{ color: '#efd18b', fontWeight: 800, flex: 1 }}>TKD PERUN</Typography>
+        <Button color="inherit" disabled={busy} onClick={logout}>Odjavi se</Button>
+      </Toolbar>
+    </AppBar>
+    <Box component="main" sx={{ maxWidth: 1120, mx: 'auto', px: { xs: 2, sm: 3 }, pt: { xs: 2.5, sm: 4 }, pb: 'calc(84px + env(safe-area-inset-bottom))' }}>{children}</Box>
+    <BottomNavigation component="nav" aria-label="Glavna navigacija" showLabels value={page}
+      sx={{ position: 'fixed', inset: 'auto 0 0', zIndex: 10, height: 'calc(56px + env(safe-area-inset-bottom))', pb: 'env(safe-area-inset-bottom)', bgcolor: 'secondary.main' }}>
+      {pages.map(({ label, icon }) => <BottomNavigationAction key={label} value={label} label={label} icon={icon}
+        aria-current={page === label ? 'page' : undefined} disabled={busy} onClick={() => navigate(label)}
+        sx={{ minWidth: 0, flex: 1, maxWidth: 'none', color: '#f2eee7', '&.Mui-selected': { color: '#efd18b' }, '& svg': { width: 20, height: 20, transform: 'translateY(6px)' } }} />)}
+    </BottomNavigation>
   </>
 }

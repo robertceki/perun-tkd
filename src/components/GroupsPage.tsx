@@ -1,3 +1,6 @@
+import { Typography, Box, Button } from '@mui/material'
+import { SettingsDetail } from './SettingsDetail'
+import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
 import type { ClubData, Group } from '../domain/types'
 import { validateGroup } from '../domain/validation'
@@ -14,13 +17,30 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
     const invalid = validateGroup(draft); setErrors(invalid)
     if (!invalid.length && await club.saveGroup({ ...draft, name: draft.name.trim() }) === 'saved') setDraft(null)
   }
-  if (draft) return <>
-    <button type="button" className="btn btn-link px-0 mb-2" disabled={club.busy} onClick={() => setDraft(null)}>‹ Nazad na spisak grupa</button>
-    <section className="card mb-4"><div className="card-body"><h2 className="h4">Grupa</h2><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <p className="text-body-secondary">Vrsta je zaključana jer grupa ima povezane podatke.</p>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form></div></section>
+  if (draft) {
+    const members = data.children.filter(child => child.main_group_id === draft.id || child.competition_group_id === draft.id)
+    return <>
+    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Typography variant="body2" color="text.secondary">Vrsta je zaključana jer grupa ima povezane podatke.</Typography>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
+      {members.length > 0 && <Box component="section" sx={{ mt: 1.5 }}>
+        <Typography component="h3" variant="subtitle1">Članovi ({members.length}, aktivni: {members.filter(child => child.status === 'active').length})</Typography>
+        <ul>{members.map(child => <li key={child.id}>{child.first_name} {child.last_name}{child.status === 'inactive' ? ' — neaktivan' : ''}</li>)}</ul>
+      </Box>}
+    </SettingsDetail>
   </>
+  }
 
-  return <><h1 className="h3">Grupe</h1><p>Deaktivacija čuva članove, termine i istoriju. Vrsta povezane grupe ne može se menjati.</p><button type="button" className="btn btn-primary mb-3" disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), name: '', kind: 'main', active: true })}>Dodaj grupu</button>
-    {!data.groups.length ? <p role="status">Nema grupa. Najpre dodajte glavnu grupu.</p> : <div className="row g-3">{data.groups.map(group => { const members = data.children.filter(c => c.main_group_id === group.id || c.competition_group_id === group.id); return <div className="col-12 col-md-6" key={group.id}><section className="card h-100"><div className="card-body"><h2 className="h5 text-break">{group.name}</h2><p>{group.kind === 'main' ? 'Glavna' : 'Takmičarska'} · {group.active ? 'Aktivna' : 'Neaktivna'}</p><p>Članovi: {members.length} (aktivni: {members.filter(c => c.status === 'active').length})</p>{members.length > 0 && <ul>{members.map(c => <li key={c.id}>{c.first_name} {c.last_name}{c.status === 'inactive' ? ' — neaktivan' : ''}</li>)}</ul>}<button type="button" className="btn btn-outline-primary" disabled={club.busy} onClick={() => edit(group)} aria-label={`Uredi grupu ${group.name}`}>Uredi / aktivnost</button></div></section></div> })}</div>}
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Grupe</Typography><p>Deaktivacija čuva članove, termine i istoriju. Vrsta povezane grupe ne može se menjati.</p><Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), name: '', kind: 'main', active: true })}>Dodaj grupu</Button>
+    {!data.groups.length ? <p role="status">Nema grupa. Najpre dodajte glavnu grupu.</p> :
+      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }} aria-label="Spisak grupa">{data.groups.map(group => {
+        const members = data.children.filter(child => child.main_group_id === group.id || child.competition_group_id === group.id)
+        return <li key={group.id}>
+          <DirectoryCard disabled={club.busy} onClick={() => edit(group)} label={`Uredi grupu ${group.name}`}>
+            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
+              <span role="heading" aria-level={2}><strong>{group.name}</strong></span>
+              <small>{group.kind === 'main' ? 'Glavna' : 'Takmičarska'} · {group.active ? 'Aktivna' : 'Neaktivna'} · Članovi: {members.length}</small></Box>
+          </DirectoryCard>
+        </li>
+      })}</Box>}
   </>
 }
 
