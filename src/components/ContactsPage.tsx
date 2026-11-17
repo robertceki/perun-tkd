@@ -42,7 +42,7 @@ export function ContactsPage({ data, club }: { data: ClubData; club: ClubControl
           return <li key={contact.id}>
             <DirectoryCard disabled={club.busy} onClick={() => edit(contact)}
               label={`Uredi kontakt ${contact.first_name} ${contact.last_name}`}>
-              <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
+              <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
                 <strong>{contact.first_name} {contact.last_name}</strong>
                 <small>{children.length ? children.map(child => child.first_name + ' ' + child.last_name).join(', ') : 'Nema povezane dece'}</small></Box>
           </DirectoryCard>

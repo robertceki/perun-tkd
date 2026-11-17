@@ -186,11 +186,11 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
               if (!event.target.value || event.target.validity.valid) setDate(event.target.value)
             }} />
             {currentDate && <Stack direction="row" gap={1} role="group" aria-label="Dani" sx={{ overflowX: 'auto', scrollbarWidth: 'none', mb: 2 }}>
-              {['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned', 'Svi dani'].map((label, index) => {
+              {['PON', 'UTO', 'SRE', 'ČET', 'PET', 'SUB', 'NED', 'Svi dani'].map((label, index) => {
                 const day = index === 7 ? currentDate : moveDate(currentDate, index + 1 - weekday(currentDate))
                 const active = index === 7 ? week : !week && day === currentDate
-                return <ButtonBase key={label} aria-pressed={active} onClick={() => { setWeek(index === 7); setDate(day) }} sx={{ flexShrink: 0, minHeight: 48, '&.Mui-focusVisible span': { outline: '2px solid', outlineOffset: 2 } }}>
-                  <Box component="span" sx={{ display: 'grid', placeItems: 'center', minHeight: 30, px: 1.25, border: '1px solid', borderColor: active ? 'primary.main' : '#ded6c7', bgcolor: active ? 'primary.main' : 'background.paper', borderRadius: '24px', fontSize: '.8125rem', fontWeight: 700 }}>{label}</Box>
+                return <ButtonBase key={label} aria-pressed={active} onClick={() => { setWeek(index === 7); setDate(day) }} sx={{ flexShrink: 0, minWidth: 44, minHeight: 48, '&.Mui-focusVisible span': { outline: '2px solid', outlineOffset: 2 } }}>
+                  <Box component="span" sx={{ display: 'grid', placeItems: 'center', minHeight: 30, px: 1.25, border: '1px solid', borderColor: active ? 'primary.main' : '#ded6c7', bgcolor: active ? 'primary.main' : 'background.paper', borderRadius: '24px', fontSize: { xs: '.9375rem', sm: '.8125rem' }, fontWeight: 700 }}>{label}</Box>
                 </ButtonBase>
               })}
             </Stack>}
