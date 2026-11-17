@@ -89,7 +89,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
         {visibleTerms.map(term => <li key={term.id}>
           <DirectoryCard disabled={club.busy} onClick={() => edit(term)}
             label={`Uredi termin ${days[term.weekday - 1]} ${formatTime(term.starts_at)}`}>
-            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: '.875rem' } }}>
+            <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
               <strong>{data.groups.find(group => group.id === term.group_id)?.name ?? 'Grupa'}</strong>
               <small>{formatTime(term.starts_at)}–{formatTime(term.ends_at)}{term.active ? '' : ' · Neaktivan'}</small></Box>
           </DirectoryCard>
