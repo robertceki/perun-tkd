@@ -1,20 +1,30 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, InputLabel, NativeSelect, OutlinedInput, Stack, TextField } from '@mui/material'
 
 export function Feedback({ errors = [], message }: { errors?: string[]; message?: string }) {
-  return <>{errors.length > 0 && <div className="alert alert-danger" role="alert"><ul className="mb-0">{errors.map((error, i) => <li key={i}>{error}</li>)}</ul></div>}{message && <div className="alert alert-info" role="status">{message}</div>}</>
+  return <Stack spacing={1} sx={errors.length || message ? { mb: 2 } : undefined}>
+    {errors.length > 0 && <Alert severity="error"><Box component="ul" sx={{ m: 0, pl: 2 }}>{errors.map((error, i) => <li key={i}>{error}</li>)}</Box></Alert>}
+    {message && <Alert severity="info" role="status">{message}</Alert>}
+  </Stack>
 }
-export function Field({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+export function Field({ label, onChange, value, defaultValue, type, required, disabled, ...input }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const id = useId()
-  return <div className="mb-3"><label className="form-label" htmlFor={id}>{label}</label><input {...props} id={id} className="form-control" /></div>
+  return <TextField id={id} label={label} type={type} value={value} defaultValue={defaultValue} required={required} disabled={disabled}
+    onChange={onChange} sx={{ mb: 1.25 }} slotProps={{ htmlInput: { "aria-label": label, ...input }, inputLabel: type === 'date' || type === 'time' ? { shrink: true } : undefined }} />
 }
 export function SelectField({ label, children, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; children: ReactNode }) {
   const id = useId()
-  return <div className="mb-3"><label className="form-label" htmlFor={id}>{label}</label><select {...props} id={id} className="form-select">{children}</select></div>
+  return <FormControl fullWidth size="small" required={props.required} disabled={props.disabled} sx={{ mb: 1.25 }}>
+    <InputLabel htmlFor={id} shrink>{label}</InputLabel>
+    <NativeSelect value={props.value} defaultValue={props.defaultValue} onChange={props.onChange}
+      input={<OutlinedInput label={label} notched />} inputProps={{ id, "aria-label": label, name: props.name, autoComplete: props.autoComplete, required: props.required }}>{children}</NativeSelect>
+  </FormControl>
 }
-export function Check({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  const id = useId()
-  return <div className="form-check mb-3"><input {...props} id={id} type="checkbox" className="form-check-input" /><label className="form-check-label" htmlFor={id}>{label}</label></div>
+export function Check({ label, checked, defaultChecked, disabled, required, onChange, ...input }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  return <Box sx={{ mb: 1.25 }}><FormControlLabel label={label} disabled={disabled}
+    control={<Checkbox size="small" color="secondary" checked={checked} defaultChecked={defaultChecked} required={required}
+      slotProps={{ input }} onChange={onChange} />} /></Box>
 }
 export function FormActions({ busy, cancel }: { busy: boolean; cancel: () => void }) {
-  return <div className="d-flex gap-2 flex-wrap"><button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Čuvanje…' : 'Sačuvaj'}</button><button className="btn btn-outline-secondary" type="button" disabled={busy} onClick={cancel}>Otkaži</button></div>
+  return <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}><Button variant="contained" type="submit" disabled={busy}>{busy ? 'Čuvanje…' : 'Sačuvaj'}</Button><Button variant="outlined" color="secondary" type="button" disabled={busy} onClick={cancel}>Otkaži</Button></Stack>
 }
