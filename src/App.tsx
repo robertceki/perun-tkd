@@ -1,3 +1,4 @@
+import { AttendancePrint } from './components/AttendancePrint'
 import { Alert, Box, Button, ButtonBase, Stack, Typography } from '@mui/material'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
@@ -194,6 +195,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
                 </ButtonBase>
               })}
             </Stack>}
+            {page === 'Termini' && currentDate && <AttendancePrint date={currentDate} terms={datedTerms(data, currentDate, today)} attendance={data.attendance ?? []} />}
             {days.map(day => {
               const terms = datedTerms(data, day, today)
               return <Box component="section" key={day} sx={{ mb: 2 }}>{week && <Typography component="h2" fontWeight={800}>{day}</Typography>}<TermList terms={terms} open={setSelected} selected={selected} counts={counts(terms)} /></Box>
