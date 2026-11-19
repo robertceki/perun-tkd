@@ -42,3 +42,19 @@ input, select, textarea { max-width: 100%; }
 html:has(.perun-fixed-header) {
   scroll-padding-top: calc(var(--perun-header-height) + 12px);
 }
+
+.attendance-print { display: none; }
+
+@media print {
+  @page { size: A4; margin: 15mm; }
+  body:has(> .attendance-print) { background: white; color: black; }
+  body:has(> .attendance-print) > #root { display: none; }
+  .attendance-print { display: block; font: 11pt / 1.4 system-ui, sans-serif; }
+  .attendance-print h1 { font-size: 17pt; }
+  .attendance-print h2 { font-size: 13pt; break-after: avoid; }
+  .attendance-print table { width: 100%; border-collapse: collapse; }
+  .attendance-print th, .attendance-print td { border: 1px solid #999; padding: 4pt 6pt; text-align: left; }
+  .attendance-print thead { display: table-header-group; }
+  .attendance-print tr { break-inside: avoid; }
+  .attendance-print footer { margin-top: 16pt; }
+}
