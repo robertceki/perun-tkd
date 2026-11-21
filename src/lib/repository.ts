@@ -52,6 +52,7 @@ export function createClubRepository(client: SupabaseClient) {
       const { error } = await client.from('contacts').upsert({ ...contact, first_name: contact.first_name.trim(), last_name: contact.last_name.trim(), phone: contact.phone.trim(), email: contact.email?.trim() || null, address: contact.address?.trim() || null })
       if (error) throw error
     },
+    async deleteGroup(id: string): Promise<void> { await rpc('delete_unused_group', { p_group_id: id }) },
     async saveGroup(group: Group): Promise<void> {
       check(validateGroup(group))
       const { error } = await client.from('groups').upsert({ ...group, name: group.name.trim() })

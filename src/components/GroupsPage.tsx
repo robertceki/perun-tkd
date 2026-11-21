@@ -1,4 +1,4 @@
-import { Alert, Typography, Box, Button } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Alert, Typography, Box, Button } from '@mui/material'
 import { SettingsDetail } from './SettingsDetail'
 import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
@@ -9,9 +9,11 @@ import { Check, Feedback, Field, FormActions, SelectField } from './Feedback'
 
 export function GroupsPage({ data, club }: { data: ClubData; club: ClubController }) {
   const [draft, setDraft] = useState<Group | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const edit = (value: Group) => { setDraft({ ...value }); setErrors([]) }
-  const linked = !!draft && (data.children.some(c => c.main_group_id === draft.id || c.competition_group_id === draft.id) || data.terms.some(t => t.group_id === draft.id))
+  const linked = !!draft && (data.children.some(c => c.main_group_id === draft.id || c.competition_group_id === draft.id) || data.terms.some(t => t.group_id === draft.id) || (data.sessions ?? []).some(session => session.group_id === draft.id))
+  const existing = !!draft && data.groups.some(group => group.id === draft.id)
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!draft) return
     const invalid = validateGroup(draft); setErrors(invalid)
@@ -21,6 +23,21 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
     const members = data.children.filter(child => child.main_group_id === draft.id || child.competition_group_id === draft.id)
     return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Vrsta je zaključana jer grupa ima povezane podatke.</Alert>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
+      {existing && <Box sx={{ mt: 2 }}>
+        <Button color="error" variant="outlined" disabled={club.busy || linked} onClick={() => setDeleting(true)}>Obriši grupu</Button>
+        {linked && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Grupa ima povezanu decu, termine ili istoriju. Možete je deaktivirati.</Typography>}
+      </Box>}
+      <Dialog open={deleting} onClose={() => { if (!club.busy) setDeleting(false) }} aria-labelledby="delete-group-title">
+        <DialogTitle id="delete-group-title">Obriši grupu „{draft.name}“?</DialogTitle>
+        <DialogContent>Brisanje grupe je trajno.</DialogContent>
+        <DialogActions>
+          <Button disabled={club.busy} onClick={() => setDeleting(false)}>Odustani</Button>
+          <Button color="error" disabled={club.busy || linked} onClick={async () => {
+            const result = await club.deleteGroup(draft.id)
+            if (result === 'saved' || result === 'refresh-failed') { setDeleting(false); setDraft(null) }
+          }}>Obriši</Button>
+        </DialogActions>
+      </Dialog>
       {members.length > 0 && <Box component="section" sx={{ mt: 1.5 }}>
         <Typography component="h3" variant="subtitle1">Članovi ({members.length}, aktivni: {members.filter(child => child.status === 'active').length})</Typography>
         <ul>{members.map(child => <li key={child.id}>{child.first_name} {child.last_name}{child.status === 'inactive' ? ' — neaktivan' : ''}</li>)}</ul>
