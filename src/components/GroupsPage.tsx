@@ -23,9 +23,8 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
     const members = data.children.filter(child => child.main_group_id === draft.id || child.competition_group_id === draft.id)
     return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Vrsta je zaključana jer grupa ima povezane podatke.</Alert>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
-      {existing && <Box sx={{ mt: 2 }}>
+      {existing && !linked && <Box sx={{ mt: 2 }}>
         <Button color="error" variant="outlined" disabled={club.busy || linked} onClick={() => setDeleting(true)}>Obriši grupu</Button>
-        {linked && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Grupa ima povezanu decu, termine ili istoriju. Možete je deaktivirati.</Typography>}
       </Box>}
       <Dialog open={deleting} onClose={() => { if (!club.busy) setDeleting(false) }} aria-labelledby="delete-group-title">
         <DialogTitle id="delete-group-title">Obriši grupu „{draft.name}“?</DialogTitle>

@@ -25,7 +25,7 @@ export function AppShell({ page, navigate, busy, logout, children }: { page: Pag
       sx={{ position: 'fixed', inset: 'auto 0 0', zIndex: 10, height: 'calc(56px + env(safe-area-inset-bottom))', pb: 'env(safe-area-inset-bottom)', bgcolor: 'secondary.main' }}>
       {pages.map(({ label, icon }) => <BottomNavigationAction key={label} value={label} label={label} icon={icon}
         aria-current={page === label ? 'page' : undefined} disabled={busy} onClick={() => navigate(label)}
-        sx={{ minWidth: 0, flex: 1, maxWidth: 'none', color: '#f2eee7', '&.Mui-selected': { color: '#efd18b' }, '& svg': { width: 20, height: 20, transform: 'translateY(6px)' } }} />)}
+        sx={{ minWidth: 0, flex: 1, maxWidth: 'none', color: '#f2eee7', '&.Mui-selected': { color: '#efd18b' }, '& svg': { width: 20, height: 20, transform: 'translateY(0px)' } }} />)}
     </BottomNavigation>
   </>
 }

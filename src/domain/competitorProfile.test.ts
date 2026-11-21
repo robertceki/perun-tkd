@@ -12,7 +12,7 @@ const legacy: Child = {
 const competitor: Child = { ...legacy, sex: 'F', member_type: 'competitor' }
 const term = {
   id: '10000000-0000-4000-8000-000000000002', group_id: 'competition', weekday: 1, starts_at: '18:00', ends_at: '19:00',
-  trainer_id: 'trainer', active: true, valid_from: today, valid_to: null,
+  trainer_id: 'trainer', active: true,
 }
 const assignment = { term_id: term.id, child_id: legacy.id, valid_from: today, valid_to: null }
 const weights: WeightCategory[] = [
