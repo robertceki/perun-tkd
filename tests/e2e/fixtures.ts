@@ -27,7 +27,7 @@ const actor = { created_by: trainer.id, updated_by: trainer.id, created_at: now,
 const child = (id: string, first_name: string): Child => ({ id, first_name, last_name: 'Test', birth_date: '2015-01-01',
   sex: null, member_type: 'recreational', status: 'active', main_group_id: fixtureIds.group, competition_group_id: null, address: '', belt: '' })
 const term = (id: string, starts_at: string, weekday = 1) => ({ id, starts_at, weekday, ends_at: '21:00:00',
-  group_id: fixtureIds.group, trainer_id: trainer.id, active: true, valid_from: '2026-01-01', valid_to: null })
+  group_id: fixtureIds.group, trainer_id: trainer.id, active: true })
 
 type Call = { name: string; args: Record<string, unknown> }
 const belgrade = new Intl.DateTimeFormat('sv-SE', {

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { Child, ClubData, TermAssignment } from './types'
-import { validateChild } from './validation'
+import { validateChild, validateTerm } from './validation'
 
 test('only a live enrollment blocks moving or deactivating a child', () => {
   const child: Child = {
@@ -14,7 +14,7 @@ test('only a live enrollment blocks moving or deactivating a child', () => {
     trainers: [], children: [child], childContacts: links,
     contacts: [{ id: 'parent', first_name: 'Mira', last_name: 'Test', phone: '000', email: null, address: null }],
     groups: ['original', 'other'].map(id => ({ id, name: id, kind: 'main', active: true })),
-    terms: [{ id: 'term', group_id: 'original', weekday: 1, starts_at: '18:00:00', ends_at: '19:00:00', trainer_id: '', valid_from: '2026-01-01', valid_to: null, active: true }],
+    terms: [{ id: 'term', group_id: 'original', weekday: 1, starts_at: '18:00:00', ends_at: '19:00:00', trainer_id: '', active: true }],
     assignments: [assignment],
   }
   const cancelled = { ...data, assignments: [{ ...assignment, cancelled_at: '2026-07-06T18:00:00Z' }] }
@@ -22,4 +22,24 @@ test('only a live enrollment blocks moving or deactivating a child', () => {
     expect(validateChild(changed, links, data)).toEqual([expect.stringMatching(/Najpre završite upise/)])
     expect(validateChild(changed, links, cancelled)).toEqual([])
   }
+})
+
+test('term without validity dates accepts independent enrollment periods and rejects reversed periods', () => {
+  const term = {
+    id: '00000000-0000-4000-8000-000000000001', group_id: 'group', weekday: 1,
+    starts_at: '18:00', ends_at: '19:00', trainer_id: '', active: true,
+  }
+  const child: Child = {
+    id: '00000000-0000-4000-8000-000000000002', first_name: 'Ana', last_name: 'Test',
+    birth_date: '2015-02-01', sex: 'F', address: '', belt: '', status: 'active',
+    main_group_id: 'group', competition_group_id: null, member_type: 'recreational',
+  }
+  const data: ClubData = {
+    trainers: [], groups: [{ id: 'group', name: 'Grupa', kind: 'main', active: true }],
+    children: [child], contacts: [], childContacts: [], terms: [], assignments: [],
+  }
+  const enrollment = { term_id: term.id, child_id: child.id, valid_from: '2026-01-01', valid_to: null }
+  expect(validateTerm(term, [enrollment], data)).toEqual([])
+  expect(validateTerm(term, [{ ...enrollment, valid_to: '2025-12-31' }], data))
+    .toContain('Period upisa nije ispravan ili dete nije dostupno.')
 })

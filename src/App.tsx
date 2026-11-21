@@ -50,7 +50,7 @@ function weekday(date: string) {
 function datedTerms(data: ClubData, date: string, today: string): DatedTerm[] {
   const results = new Map<string, DatedTerm>()
   for (const term of data.terms) {
-    if (term.weekday !== weekday(date) || term.valid_from > date || (term.valid_to && term.valid_to < date)) continue
+    if (term.weekday !== weekday(date)) continue
     if (date >= today && !term.active) continue
     results.set(term.id, {
       termId: term.id, date, group: data.groups.find(group => group.id === term.group_id)?.name ?? 'Grupa',
