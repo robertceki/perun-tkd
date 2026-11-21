@@ -81,7 +81,6 @@ export function validateTerm(term: WeeklyTerm, assignments: TermAssignment[], da
   if (!Number.isInteger(term.weekday) || term.weekday < 1 || term.weekday > 7) errors.push('Dan mora biti između 1 i 7.')
   const start = term.starts_at === previous?.starts_at ? time(term.starts_at) : normalizeTermTime(term.starts_at), end = term.ends_at === previous?.ends_at ? time(term.ends_at) : normalizeTermTime(term.ends_at)
   if (!start || !end || start >= end) errors.push('Početak termina mora biti pre završetka.')
-  if (!range(term.valid_from, term.valid_to)) errors.push('Period važenja termina nije ispravan.')
   if (!data.groups.some(group => group.id === term.group_id && (group.active || previous?.group_id === group.id))) errors.push('Izaberite postojeću aktivnu grupu.')
   if (term.trainer_id && !data.trainers.some(trainer => trainer.id === term.trainer_id && (trainer.active || previous?.trainer_id === trainer.id))) errors.push('Izaberite aktivnog trenera.')
   const retained = data.assignments.filter(old => old.term_id === term.id && !assignments.some(item => item.child_id === old.child_id && item.valid_from === old.valid_from))
@@ -89,7 +88,7 @@ export function validateTerm(term: WeeklyTerm, assignments: TermAssignment[], da
     const old = data.assignments.find(a => a.term_id === item.term_id && a.child_id === item.child_id && a.valid_from === item.valid_from)
     return old?.cancelled_at ? old : item
   }), ...retained]
-  if (previous && data.assignments.some(item => item.term_id === term.id) && (previous.group_id !== term.group_id || previous.weekday !== term.weekday || time(previous.starts_at) !== start || time(previous.ends_at) !== end || previous.trainer_id !== term.trainer_id || previous.valid_from !== term.valid_from)) errors.push('Za promenu povezanog rasporeda napravite novi termin.')
+  if (previous && data.assignments.some(item => item.term_id === term.id) && (previous.group_id !== term.group_id || previous.weekday !== term.weekday || time(previous.starts_at) !== start || time(previous.ends_at) !== end || previous.trainer_id !== term.trainer_id)) errors.push('Za promenu povezanog rasporeda napravite novi termin.')
   for (const [index, assignment] of effective.entries()) {
     const child = data.children.find(item => item.id === assignment.child_id)
     const old = data.assignments.find(item => item.term_id === term.id && item.child_id === assignment.child_id && item.valid_from === assignment.valid_from)
@@ -100,7 +99,7 @@ export function validateTerm(term: WeeklyTerm, assignments: TermAssignment[], da
     const unchanged = old !== undefined && old.valid_to === assignment.valid_to
     const closing = old !== undefined && assignment.valid_to !== null && (old.valid_to === null || assignment.valid_to <= old.valid_to)
     if (old && ended(old.valid_to) && !unchanged) errors.push('Završeni upis se ne može menjati.')
-    if (assignment.term_id !== term.id || !child || !range(assignment.valid_from, assignment.valid_to) || assignment.valid_from < term.valid_from || (term.valid_to !== null && (assignment.valid_to === null || assignment.valid_to > term.valid_to))) errors.push('Period upisa mora biti unutar perioda termina.')
+    if (assignment.term_id !== term.id || !child || !range(assignment.valid_from, assignment.valid_to)) errors.push('Period upisa nije ispravan ili dete nije dostupno.')
     if (!unchanged && !closing && child && !allowsCompetitionEnrollment(child, data.groups.find(group => group.id === term.group_id))) errors.push('Upis u takmičarski termin zahteva takmičara.')
     if (!unchanged && !closing && (!term.active || !data.groups.some(group => group.id === term.group_id && group.active) || (Boolean(term.trainer_id) && !data.trainers.some(trainer => trainer.id === term.trainer_id && trainer.active)) || !child || child.status !== 'active' || (child.main_group_id !== term.group_id && child.competition_group_id !== term.group_id))) errors.push('Dete ne pripada grupi termina ili nije aktivno.')
     if (effective.slice(0, index).some(other => !other.cancelled_at && other.child_id === assignment.child_id && enrollmentPeriodsOverlap(other, assignment))) errors.push('Dete je već prijavljeno na ovaj termin u izabranom periodu.')
