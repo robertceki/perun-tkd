@@ -47,12 +47,12 @@ export function validateGroup(group: Group): string[] {
 
 export function validateChild(child: Child, links: ChildContact[], data: ClubData, today = belgradeBusinessDate()): string[] {
   const errors: string[] = []
-  if (!uuid(child.id)) errors.push('Neispravan identifikator deteta.')
-  if (!names(child.first_name, child.last_name)) errors.push('Ime i prezime deteta su obavezni.')
+  if (!uuid(child.id)) errors.push('Neispravan identifikator člana.')
+  if (!names(child.first_name, child.last_name)) errors.push('Ime i prezime člana su obavezni.')
   if (!date(child.birth_date) || child.birth_date > (today || belgradeBusinessDate())) errors.push('Datum rođenja mora biti ispravan i ne može biti u budućnosti.')
-  if (!['active', 'inactive'].includes(child.status)) errors.push('Neispravan status deteta.')
+  if (!['active', 'inactive'].includes(child.status)) errors.push('Neispravan status člana.')
   const previous = data.children.find(item => item.id === child.id)
-  if (child.sex !== 'M' && child.sex !== 'F') errors.push('Izaberite pol deteta.')
+  if (child.sex !== 'M' && child.sex !== 'F') errors.push('Izaberite pol člana.')
   if ((!previous || child.member_type !== undefined) && child.member_type !== 'recreational' && child.member_type !== 'competitor') errors.push('Izaberite tip člana.')
   if (child.member_type !== 'competitor') {
     if (child.competition_group_id && (previous?.member_type === 'competitor' || child.competition_group_id !== previous?.competition_group_id)) errors.push('Takmičarska grupa zahteva takmičara.')
@@ -60,14 +60,14 @@ export function validateChild(child: Child, links: ChildContact[], data: ClubDat
   }
   if (child.competition_class && child.competition_class !== previous?.competition_class && !data.competitionClasses?.some(item => item.id === child.competition_class)) errors.push('Izaberite važeću takmičarsku klasu.')
   if (child.weight_category_id && (child.weight_category_id !== previous?.weight_category_id || child.sex !== previous.sex || child.birth_date !== previous.birth_date)
-      && !matchingWeights(child, data, today).some(weight => weight.id === child.weight_category_id)) errors.push('Izaberite težinsku kategoriju koja odgovara polu i uzrastu deteta.')
+      && !matchingWeights(child, data, today).some(weight => weight.id === child.weight_category_id)) errors.push('Izaberite težinsku kategoriju koja odgovara polu i uzrastu člana.')
   if (child.member_type !== 'competitor' && (previous?.member_type === 'competitor' || (previous?.competition_group_id && !child.competition_group_id))
       && (!today || liveCompetitionAssignments(child.id, data, today).length)) errors.push('Najpre završite ili otkažite takmičarske upise u rasporedu i proverite današnji datum.')
   const main = data.groups.find(group => group.id === child.main_group_id && group.kind === 'main')
   const competition = data.groups.find(group => group.id === child.competition_group_id && group.kind === 'competition')
   if (!main || (!main.active && previous?.main_group_id !== main.id)) errors.push('Izaberite glavnu grupu odgovarajuće vrste.')
   if (child.competition_group_id !== null && (!competition || (!competition.active && previous?.competition_group_id !== competition.id))) errors.push('Izaberite takmičarsku grupu odgovarajuće vrste.')
-  if (links.filter(link => link.is_primary).length !== 1) errors.push('Dete mora imati tačno jedan glavni kontakt.')
+  if (links.filter(link => link.is_primary).length !== 1) errors.push('Član mora imati tačno jedan glavni kontakt.')
   if (new Set(links.map(link => link.contact_id)).size !== links.length) errors.push('Kontakt je dodat više puta.')
   if (links.some(link => link.child_id !== child.id || !link.relationship.trim() || !data.contacts.some(contact => contact.id === link.contact_id))) errors.push('Veza sa kontaktom nije ispravna.')
   if (data.assignments.some(assignment => assignment.child_id === child.id && !assignment.cancelled_at && (!today || !assignment.valid_to || assignment.valid_to >= today) && (child.status !== 'active' || data.terms.some(term => term.id === assignment.term_id && term.group_id !== child.main_group_id && term.group_id !== child.competition_group_id)))) errors.push('Najpre završite upise u termine prethodne grupe.')
@@ -99,10 +99,10 @@ export function validateTerm(term: WeeklyTerm, assignments: TermAssignment[], da
     const unchanged = old !== undefined && old.valid_to === assignment.valid_to
     const closing = old !== undefined && assignment.valid_to !== null && (old.valid_to === null || assignment.valid_to <= old.valid_to)
     if (old && ended(old.valid_to) && !unchanged) errors.push('Završeni upis se ne može menjati.')
-    if (assignment.term_id !== term.id || !child || !range(assignment.valid_from, assignment.valid_to)) errors.push('Period upisa nije ispravan ili dete nije dostupno.')
+    if (assignment.term_id !== term.id || !child || !range(assignment.valid_from, assignment.valid_to)) errors.push('Period upisa nije ispravan ili član nije dostupan.')
     if (!unchanged && !closing && child && !allowsCompetitionEnrollment(child, data.groups.find(group => group.id === term.group_id))) errors.push('Upis u takmičarski termin zahteva takmičara.')
-    if (!unchanged && !closing && (!term.active || !data.groups.some(group => group.id === term.group_id && group.active) || (Boolean(term.trainer_id) && !data.trainers.some(trainer => trainer.id === term.trainer_id && trainer.active)) || !child || child.status !== 'active' || (child.main_group_id !== term.group_id && child.competition_group_id !== term.group_id))) errors.push('Dete ne pripada grupi termina ili nije aktivno.')
-    if (effective.slice(0, index).some(other => !other.cancelled_at && other.child_id === assignment.child_id && enrollmentPeriodsOverlap(other, assignment))) errors.push('Dete je već prijavljeno na ovaj termin u izabranom periodu.')
+    if (!unchanged && !closing && (!term.active || !data.groups.some(group => group.id === term.group_id && group.active) || (Boolean(term.trainer_id) && !data.trainers.some(trainer => trainer.id === term.trainer_id && trainer.active)) || !child || child.status !== 'active' || (child.main_group_id !== term.group_id && child.competition_group_id !== term.group_id))) errors.push('Član ne pripada grupi termina ili nije aktivan.')
+    if (effective.slice(0, index).some(other => !other.cancelled_at && other.child_id === assignment.child_id && enrollmentPeriodsOverlap(other, assignment))) errors.push('Član je već prijavljen na ovaj termin u izabranom periodu.')
   }
   return errors
 }

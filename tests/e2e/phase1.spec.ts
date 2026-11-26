@@ -19,10 +19,10 @@ test('settings keeps core forms and reuses the existing sibling contact', async 
   await button('Sačuvaj').click()
   await expect(page.getByRole('heading', { name: 'Nova grupa' })).toBeVisible()
 
-  await button('Deca').click()
-  await button(/Dodaj dete/i).click()
-  await label('Ime deteta').fill('Lana')
-  await label('Prezime deteta').fill('Test')
+  await button('Članovi').click()
+  await button(/Dodaj člana/i).click()
+  await label('Ime člana').fill('Lana')
+  await label('Prezime člana').fill('Test')
   await label('Registarski broj').fill('  0009/L  ')
   await label('Datum rođenja').fill('2016-01-01')
   await label('Pol').selectOption('F')
@@ -32,7 +32,7 @@ test('settings keeps core forms and reuses the existing sibling contact', async 
   await label('Kontakt 1').selectOption(fixtureIds.parent)
   await label(/Odnos kontakta 1/).fill('majka')
   await button('Sačuvaj').click()
-  await expect(button('Uredi dete Lana Test')).toBeVisible()
+  await expect(button('Uredi člana Lana Test')).toBeVisible()
   expect(calls.find(call => call.name === 'save_child')?.args.p_child).toMatchObject({ registration_number: '0009/L' })
   expect(calls.find(call => call.name === 'save_child')?.args.p_contacts).toEqual([
     expect.objectContaining({ contact_id: fixtureIds.parent, is_primary: true }),
@@ -48,9 +48,9 @@ test('child notes preserve multiple lines after reload and can be cleared', asyn
   const label = (name: string) => page.getByLabel(name, { exact: true })
   const openChildren = async () => {
     await button('Podešavanja').click()
-    await button('Deca').click()
+    await button('Članovi').click()
   }
-  const edit = button('Uredi dete Lana Test')
+  const edit = button('Uredi člana Lana Test')
   const notes = label('Napomene')
   const multiline = 'Poneti opremu.\nKontaktirati roditelja posle treninga.'
   const save = async () => {
@@ -60,9 +60,9 @@ test('child notes preserve multiple lines after reload and can be cleared', asyn
 
   await login(page)
   await openChildren()
-  await button('Dodaj dete').click()
-  await label('Ime deteta').fill('Lana')
-  await label('Prezime deteta').fill('Test')
+  await button('Dodaj člana').click()
+  await label('Ime člana').fill('Lana')
+  await label('Prezime člana').fill('Test')
   await label('Registarski broj').fill('  0009/L  ')
   await label('Datum rođenja').fill('2016-01-01')
   await label('Pol').selectOption('F')
@@ -70,7 +70,7 @@ test('child notes preserve multiple lines after reload and can be cleared', asyn
   await label('Glavna grupa').selectOption(fixtureIds.group)
   await button('Poveži postojeći kontakt').click()
   await label('Kontakt 1').selectOption(fixtureIds.parent)
-  await label('Odnos kontakta 1 sa detetom').fill('majka')
+  await label('Odnos kontakta 1 sa članom').fill('majka')
   await expect(notes).toHaveValue('')
   await save()
 
@@ -109,7 +109,7 @@ test('an existing enrollment blocks a duplicate for the same period', async ({ p
   await page.getByRole('button', { name: 'Uredi termin Ponedeljak 18:00' }).click()
   await page.getByRole('button', { name: 'Dodaj upis' }).click()
 
-  const child = page.getByLabel('Dete za upis 2', { exact: true })
+  const child = page.getByLabel('Član za upis 2', { exact: true })
   await expect(child.getByRole('option', { name: 'Ana Test — već prijavljeno' })).toBeDisabled()
   await expect(child.getByRole('option', { name: 'Iva Test' })).toBeEnabled()
   await page.getByLabel('Upis 1 do (prazno: bez završetka)', { exact: true }).fill('2099-01-01')
@@ -119,7 +119,7 @@ test('an existing enrollment blocks a duplicate for the same period', async ({ p
   await start.fill('2099-01-02')
   await child.selectOption(fixtureIds.ana)
   await start.fill('2098-12-31')
-  await expect(page.getByRole('alert').filter({ hasText: 'Dete je već prijavljeno' })).toBeVisible()
+  await expect(page.getByRole('alert').filter({ hasText: 'Član je već prijavljen' })).toBeVisible()
   await page.getByRole('button', { name: 'Sačuvaj', exact: true }).click()
   expect(calls.filter(call => call.name === 'save_term')).toHaveLength(0)
 
@@ -136,10 +136,10 @@ test('medical exam date rejects future input, persists, filters, and clears', as
   const button = (name: string) => page.getByRole('button', { name, exact: true })
   const openChildren = async () => {
     await button('Podešavanja').click()
-    await button('Deca').click()
+    await button('Članovi').click()
   }
   const date = page.getByLabel('Datum lekarskog pregleda', { exact: true })
-  const edit = button('Uredi dete Ana Test')
+  const edit = button('Uredi člana Ana Test')
   const clear = button('Obriši datum lekarskog pregleda')
   const save = button('Sačuvaj')
   const filter = page.getByLabel('Lekarski pregled', { exact: true })
@@ -166,7 +166,7 @@ test('medical exam date rejects future input, persists, filters, and clears', as
   await expect(date).toBeHidden()
   await page.reload()
   await openChildren()
-  await expect(button('Uredi dete Iva Test')).toBeVisible()
+  await expect(button('Uredi člana Iva Test')).toBeVisible()
   await page.getByRole('button', { name: 'Filteri', exact: true }).click()
   await filter.selectOption({ label: 'Ističe uskoro ili je istekao' })
   await expect(page.getByRole('button', { name: 'Filteri (1)', exact: true })).toBeVisible()
@@ -174,7 +174,7 @@ test('medical exam date rejects future input, persists, filters, and clears', as
   await expect(filter).toBeHidden()
   await expect(edit).toBeVisible()
   await expect(page.getByText('Lekarski pregled ističe za 14 dana', { exact: true })).toBeVisible()
-  await expect(button('Uredi dete Iva Test')).toHaveCount(0)
+  await expect(button('Uredi člana Iva Test')).toHaveCount(0)
 
   await edit.click()
   await expect(date).toHaveValue('2026-01-20')
@@ -182,7 +182,7 @@ test('medical exam date rejects future input, persists, filters, and clears', as
   await expect(date).toHaveValue('')
   await save.click()
   await expect(edit).toHaveCount(0)
-  await expect(page.getByRole('status').filter({ hasText: 'Nema dece koja odgovaraju izabranim filterima.' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Nema članova koji odgovaraju izabranim filterima.' })).toBeVisible()
   await page.reload()
   await openChildren()
   await edit.click()
@@ -202,8 +202,8 @@ for (const [examDate, warning] of [
     test('shows the exact expiry date', async ({ page, calls }) => {
       await login(page)
       await page.getByRole('button', { name: 'Podešavanja', exact: true }).click()
-      await page.getByRole('button', { name: 'Deca', exact: true }).click()
-      await page.getByRole('button', { name: 'Uredi dete Ana Test' }).click()
+      await page.getByRole('button', { name: 'Članovi', exact: true }).click()
+      await page.getByRole('button', { name: 'Uredi člana Ana Test' }).click()
       await expect(page.getByText(warning, { exact: true })).toBeVisible()
       expect(calls.filter(call => call.name === 'save_child')).toEqual([])
     })
@@ -215,13 +215,13 @@ test('competitor details persist and the membership filter excludes recreational
   const label = (name: string) => page.getByLabel(name, { exact: true })
   const openChildren = async () => {
     await button('Podešavanja').click()
-    await button('Deca').click()
+    await button('Članovi').click()
   }
   const weight = label('Težinska kategorija (opciono)')
   const competitionClass = label('Takmičarska klasa (opciono)')
   await login(page)
   await openChildren()
-  await button('Uredi dete Ana Test').click()
+  await button('Uredi člana Ana Test').click()
   await label('Tip člana').selectOption('competitor')
   await expect(competitionClass).toHaveValue('')
   await expect(weight).toHaveValue('')
@@ -243,7 +243,7 @@ test('competitor details persist and the membership filter excludes recreational
   await page.getByRole('button', { name: 'Filteri', exact: true }).click()
   await label('Tip člana').selectOption('competitor')
   await expect(page.getByRole('row', { name: /Iva Test/ })).toHaveCount(0)
-  await button('Uredi dete Ana Test').click()
+  await button('Uredi člana Ana Test').click()
   await expect(label('Tip člana')).toHaveValue('competitor')
   await expect(competitionClass).toHaveValue('B')
   await expect(weight).toHaveValue('cadets:M:-33')

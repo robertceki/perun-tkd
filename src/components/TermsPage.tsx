@@ -52,7 +52,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
       <SelectField label="Dan u nedelji" disabled={scheduleLocked} value={draft.weekday} onChange={e => setDraft({ ...draft, weekday: Number(e.target.value) })}>{days.map((day, index) => <option key={day} value={index + 1}>{day}</option>)}</SelectField>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Početak" type="time" step="60" required disabled={scheduleLocked} value={draft.starts_at.slice(0, 5)} onChange={e => setDraft({ ...draft, starts_at: e.target.value })} /><Field label="Završetak" type="time" step="60" required disabled={scheduleLocked} value={draft.ends_at.slice(0, 5)} onChange={e => setDraft({ ...draft, ends_at: e.target.value })} /></Box>
       <Check label="Aktivan termin" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} />
-      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi dece</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Postojeći upis završite unosom datuma „Upis do“. Upis se ne briše. Novi period istog deteta mora početi posle završetka prethodnog. </Alert>
+      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi članova</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Postojeći upis završite unosom datuma „Upis do“. Upis se ne briše. Novi period istog člana mora početi posle završetka prethodnog. </Alert>
         {assignments.map((assignment, index) => {
           const old = oldRows.find(a => a.child_id === assignment.child_id && a.valid_from === assignment.valid_from)
           const historical = !!old?.cancelled_at || (!!old?.valid_to && old.valid_to < today)
@@ -64,13 +64,13 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
             enrollmentPeriodsOverlap(other, assignment))
           const enrollmentConflict = !old && !!assignment.child_id && alreadyEnrolled(assignment.child_id)
           return <Box key={index} sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1.5, pb: 1.5 }}><Typography component="h3" variant="subtitle1">Upis {index + 1}{old?.cancelled_at ? ' — otkazan' : historical ? ' — završen' : ''}</Typography>
-            {old ? <p>{child?.first_name} {child?.last_name}</p> : <SelectField label={`Dete za upis ${index + 1}`} required value={assignment.child_id} onChange={e => changeAssignment(index, { child_id: e.target.value })}><option value="">Izaberite dete</option>{eligible.map(c => {
+            {old ? <p>{child?.first_name} {child?.last_name}</p> : <SelectField label={`Član za upis ${index + 1}`} required value={assignment.child_id} onChange={e => changeAssignment(index, { child_id: e.target.value })}><option value="">Izaberite člana</option>{eligible.map(c => {
               const enrolled = alreadyEnrolled(c.id)
               return <option key={c.id} value={c.id} disabled={enrolled && c.id !== assignment.child_id}>
                 {c.first_name} {c.last_name}{enrolled ? ' — već prijavljeno' : ''}
               </option>
             })}</SelectField>}
-            {enrollmentConflict && <Alert severity="error">Dete je već prijavljeno na ovaj termin u izabranom periodu.</Alert>}
+            {enrollmentConflict && <Alert severity="error">Član je već prijavljen na ovaj termin u izabranom periodu.</Alert>}
             <Field label={`Upis ${index + 1} od`} type="date" required readOnly={!!old} value={assignment.valid_from} onChange={e => changeAssignment(index, { valid_from: e.target.value })} />
             <Field label={`Upis ${index + 1} do (prazno: bez završetka)`} type="date" readOnly={historical} min={assignment.valid_from} value={assignment.valid_to ?? ''} onChange={e => changeAssignment(index, { valid_to: e.target.value || null })} />
             {old && !historical && today && old.valid_from > today && <Button type="button" variant="outlined" color="error" onClick={async () => {
@@ -80,7 +80,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
             {!old && <Button type="button" variant="outlined" onClick={() => setAssignments(assignments.filter((_, i) => i !== index))}>Ukloni nesačuvani upis {index + 1}</Button>}
           </Box>
         })}
-        {!eligible.length && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>U grupi nema dece koja ispunjavaju uslove za upis. <Button type="button" color="secondary" onClick={() => navigate('Deca')}>Otvori decu</Button></Alert>}
+        {!eligible.length && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>U grupi nema članova koji ispunjavaju uslove za upis. <Button type="button" color="secondary" onClick={() => navigate('Članovi')}>Otvori članove</Button></Alert>}
         {!enrollmentReady && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Novi ili produženi upisi zahtevaju aktivan termin, grupu i trenera.</Alert>}
         <Button type="button" variant="outlined" disabled={!eligible.length || !enrollmentReady || !today} onClick={() => setAssignments([...assignments, { term_id: draft.id, child_id: '', valid_from: today, valid_to: null }])}>Dodaj upis</Button>
       </Box><FormActions busy={club.busy} cancel={() => setDraft(null)} />
@@ -91,7 +91,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
     </SettingsDetail>
     <Dialog open={deleteOpen} onClose={() => { if (!club.busy) setDeleteOpen(false) }} fullWidth maxWidth="xs" aria-labelledby="delete-term-title">
       <DialogTitle id="delete-term-title">Obriši termin?</DialogTitle>
-      <DialogContent><DialogContentText>Termin će biti trajno obrisan.{oldRows.length > 0 ? ' Obrisaće se i budući upisi dece.' : ''}</DialogContentText></DialogContent>
+      <DialogContent><DialogContentText>Termin će biti trajno obrisan.{oldRows.length > 0 ? ' Obrisaće se i budući upisi članova.' : ''}</DialogContentText></DialogContent>
       <DialogActions>
         <Button color="secondary" disabled={club.busy} onClick={() => setDeleteOpen(false)}>Odustani</Button>
         <Button color="error" disabled={club.busy || !canDelete} onClick={() => void removeTerm()}>Obriši termin</Button>

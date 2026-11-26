@@ -2,6 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Child, ChildContact, ClubData, Contact, Group, TermAssignment, WeeklyTerm } from '../domain/types'
 import { repository } from '../lib/repository'
 
+const memberErrorMessages = new Map<string, string>([
+  ['Dete mora imati tačno jedan glavni kontakt.', 'Član mora imati tačno jedan glavni kontakt.'],
+  ['Dete ne postoji.', 'Član ne postoji.'],
+  ['Dete nije podobno za ovaj termin.', 'Član ne ispunjava uslove za ovaj termin.'],
+  ['Dete nije u istorijskom spisku.', 'Član nije u istorijskom spisku.'],
+  ['Dete nije u planiranom spisku.', 'Član nije u planiranom spisku.'],
+  ['Dete nije u spisku treninga.', 'Član nije na spisku treninga.'],
+  ['Kontakt pripada drugom detetu.', 'Kontakt pripada drugom članu.'],
+  ['Najpre završite postojeće upise deteta.', 'Najpre završite postojeće upise člana.'],
+  ['Pol je obavezan za novo dete.', 'Pol je obavezan za novog člana.'],
+  ['Težinska kategorija ne odgovara polu i uzrastu deteta.', 'Težinska kategorija ne odgovara polu i uzrastu člana.'],
+  ['Tip članstva je obavezan za novo dete.', 'Tip članstva je obavezan za novog člana.'],
+  ['Unesite registarski broj deteta.', 'Unesite registarski broj člana.'],
+  ['Zamena mora biti aktivno dete.', 'Zamena mora biti aktivan član.'],
+])
+
 export type SaveResult = 'saved' | 'refresh-failed' | 'failed'
 export function useClubData(trainerKey: string | null) {
   const generation = useRef({ version: 0 })
@@ -37,7 +53,7 @@ export function useClubData(trainerKey: string | null) {
     locked.current = true; setSaving(true); setError(''); setNotice('')
     const version = ++generation.current.version
     try { await write() } catch (cause) {
-      if (currentKey.current === trainerKey && version === generation.current.version) { setError('Čuvanje nije uspelo. ' + (cause && typeof cause === 'object' && 'message' in cause && typeof cause.message === 'string' ? cause.message : 'Proverite vezu i pokušajte ponovo.')); locked.current = false; setSaving(false) }
+      if (currentKey.current === trainerKey && version === generation.current.version) { setError('Čuvanje nije uspelo. ' + (cause && typeof cause === 'object' && 'message' in cause && typeof cause.message === 'string' ? memberErrorMessages.get(cause.message) ?? cause.message : 'Proverite vezu i pokušajte ponovo.')); locked.current = false; setSaving(false) }
       return 'failed'
     }
     if (currentKey.current !== trainerKey || version !== generation.current.version) return 'failed'

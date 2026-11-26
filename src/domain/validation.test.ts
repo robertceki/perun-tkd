@@ -41,5 +41,5 @@ test('term without validity dates accepts independent enrollment periods and rej
   const enrollment = { term_id: term.id, child_id: child.id, valid_from: '2026-01-01', valid_to: null }
   expect(validateTerm(term, [enrollment], data)).toEqual([])
   expect(validateTerm(term, [{ ...enrollment, valid_to: '2025-12-31' }], data))
-    .toContain('Period upisa nije ispravan ili dete nije dostupno.')
+    .toContain('Period upisa nije ispravan ili član nije dostupan.')
 })

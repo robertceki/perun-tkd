@@ -35,7 +35,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
     event.preventDefault(); if (!draft) return
     const value = { ...draft, registration_number: draft.registration_number?.trim() ?? '', first_name: draft.first_name.trim(), last_name: draft.last_name.trim(), address: draft.address.trim(), belt: draft.belt.trim(), notes: draft.notes?.trim() ? draft.notes : null }
     const invalid = validateChild(value, links, data, today)
-    if (!value.registration_number) invalid.push('Unesite registarski broj deteta.')
+    if (!value.registration_number) invalid.push('Unesite registarski broj člana.')
     if (!today && value.medical_exam_date === previous?.medical_exam_date) delete value.medical_exam_date
     const medicalExamError = validateMedicalExamDate(value.medical_exam_date, today)
     if (medicalExamError) invalid.push(medicalExamError)
@@ -46,9 +46,9 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
   const list = data.children.map(child => ({ child, medicalExam: getMedicalExamDetails(child.medical_exam_date, today) }))
     .filter(({ child: c, medicalExam }) => (memberType === 'all' || (c.member_type ?? 'recreational') === memberType) && (!medicalWarningOnly || isMedicalExamWarning(medicalExam.status)) && `${c.first_name} ${c.last_name}`.toLocaleLowerCase('sr-Latn').includes(query.toLocaleLowerCase('sr-Latn')) && (status === 'all' || c.status === status) && (!group || c.main_group_id === group || c.competition_group_id === group))
   if (draft) return <>
-    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak dece" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi dete' : 'Novo dete'}</Typography><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
+    <SettingsDetail busy={club.busy} backLabel="Nazad na spisak članova" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi člana' : 'Novi član'}</Typography><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
       {draft.member_type === 'competitor' && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Polja označena zvezdicom (*) su obavezna. Potreban je jedan glavni kontakt.</Alert>}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Ime deteta" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} /><Field label="Prezime deteta" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} /></Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Ime člana" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} /><Field label="Prezime člana" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} /></Box>
       <Field label="Registarski broj" type="text" required value={draft.registration_number ?? ''}
         onChange={e => setDraft({ ...draft, registration_number: e.target.value })} />
       <CompetitorProfile child={draft} previous={previous} data={data} today={today} change={setDraft} openSchedule={openSchedule ?? (() => navigate('Termini'))} />
@@ -70,12 +70,12 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
       <Box sx={{ mb: 1.5 }}>
         <TextField label="Napomene" id="child-notes" multiline minRows={2} value={draft.notes ?? ''} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
       </Box>
-      <SelectField label="Status deteta" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Child['status'] })}><option value="active">Aktivno</option><option value="inactive">Neaktivno</option></SelectField>
+      <SelectField label="Status člana" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Child['status'] })}><option value="active">Aktivan</option><option value="inactive">Neaktivan</option></SelectField>
       <SelectField label="Glavna grupa" required value={draft.main_group_id} onChange={e => setDraft({ ...draft, main_group_id: e.target.value })}><option value="">Izaberite glavnu grupu</option>{data.groups.filter(g => g.kind === 'main' && (g.active || g.id === previous?.main_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>
-      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Kontakti deteta</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Izaberite postojeće kontakte, odnos i tačno jedan glavni kontakt.</Alert>
+      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Kontakti člana</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Izaberite postojeće kontakte, odnos i tačno jedan glavni kontakt.</Alert>
         {links.map((link, index) => <Box key={index} sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1.5, pb: 1.5 }}>
           <SelectField label={`Kontakt ${index + 1}`} required value={link.contact_id} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, contact_id: e.target.value } : item))}><option value="">Izaberite kontakt</option>{data.contacts.filter(c => c.id === link.contact_id || !links.some(item => item.contact_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name} — {c.phone}</option>)}</SelectField>
-          <Field label={`Odnos kontakta ${index + 1} sa detetom`} required placeholder="Npr. majka, otac, staratelj" value={link.relationship} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, relationship: e.target.value } : item))} />
+          <Field label={`Odnos kontakta ${index + 1} sa članom`} required placeholder="Npr. majka, otac, staratelj" value={link.relationship} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, relationship: e.target.value } : item))} />
           <FormControlLabel sx={{ mb: 1 }} label="Glavni kontakt" control={<Radio size="small" name="primary-contact" checked={link.is_primary} onChange={() => setLinks(links.map((item, i) => ({ ...item, is_primary: i === index })))} />} />
           <Button type="button" variant="outlined" onClick={() => setLinks(links.filter((_, i) => i !== index))}>Ukloni vezu sa kontaktom {index + 1}</Button>
         </Box>)}
@@ -84,20 +84,20 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
     </fieldset></form></SettingsDetail>
   </>
 
-  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Deca</Typography>
-    {!ready && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Za novo dete potrebni su aktivna glavna grupa i kontakt. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button><Button type="button" color="secondary" onClick={() => navigate('Kontakti')}>Otvori kontakte</Button></Alert>}
-    <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', address: '', belt: '', status: 'active', main_group_id: '', competition_group_id: null })}>Dodaj dete</Button>
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Članovi</Typography>
+    {!ready && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Za novog člana potrebni su aktivna glavna grupa i kontakt. <Button type="button" color="secondary" onClick={() => navigate('Grupe')}>Otvori grupe</Button><Button type="button" color="secondary" onClick={() => navigate('Kontakti')}>Otvori kontakte</Button></Alert>}
+    <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy || !ready} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', address: '', belt: '', status: 'active', main_group_id: '', competition_group_id: null })}>Dodaj člana</Button>
 
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
       <Box sx={{ flex: 1, minWidth: 0, '& > *': { mb: 0 } }}>
-        <Field label="Pretraži decu" type="search" placeholder="Ime i prezime" value={query} onChange={e => { setQuery(e.target.value) }} />
+        <Field label="Pretraži članove" type="search" placeholder="Ime i prezime" value={query} onChange={e => { setQuery(e.target.value) }} />
       </Box>
       <Button type="button" variant="outlined" aria-expanded={filtersOpen} aria-controls="child-filters"
         onClick={() => setFiltersOpen(!filtersOpen)}>Filteri{filterCount > 0 ? ` (${filterCount})` : ''}</Button>
     </Box>
     <Box id="child-filters" hidden={!filtersOpen} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}>
       <Box sx={{ display: 'grid', gap: '0 12px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 135px), 1fr))' }}>
-<div><SelectField label="Status" value={status} onChange={e => { setStatus(e.target.value) }}><option value="all">Svi statusi</option><option value="active">Aktivna</option><option value="inactive">Neaktivna</option></SelectField></div>
+<div><SelectField label="Status" value={status} onChange={e => { setStatus(e.target.value) }}><option value="all">Svi statusi</option><option value="active">Aktivni</option><option value="inactive">Neaktivni</option></SelectField></div>
 <div><SelectField label="Grupa" value={group} onChange={e => { setGroup(e.target.value) }}><option value="">Sve grupe</option>{data.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</SelectField></div>
 <div><SelectField label="Tip člana" value={memberType} onChange={e => { setMemberType(e.target.value) }}>
       <option value="all">Svi tipovi članova</option>
@@ -113,11 +113,11 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         }}>Poništi filtere</Button>}
       </Box>
     </Box>
-    {!list.length ? <Alert variant="outlined" severity="info" role="status">Nema dece koja odgovaraju izabranim filterima.</Alert> : <>
-      <Box component="ul" sx={{ listStyle: 'none', p: 0, mb: 1 }} aria-label="Spisak dece">
+    {!list.length ? <Alert variant="outlined" severity="info" role="status">Nema članova koji odgovaraju izabranim filterima.</Alert> : <>
+      <Box component="ul" sx={{ listStyle: 'none', p: 0, mb: 1 }} aria-label="Spisak članova">
         {list.map(({ child, medicalExam }) => <li key={child.id}>
           <DirectoryCard disabled={club.busy}
-            onClick={() => edit(child)} label={`Uredi dete ${child.first_name} ${child.last_name}`}>
+            onClick={() => edit(child)} label={`Uredi člana ${child.first_name} ${child.last_name}`}>
             <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
               <strong>{child.first_name} {child.last_name}</strong>
               <small>{data.groups.find(group => group.id === child.main_group_id)?.name}</small></Box>

@@ -38,7 +38,7 @@ export function AttendancePrint({ date, terms, attendance }: {
                 <td>{row.present ? 'Prisutan' : completed ? 'Odsutan' : 'Nije potvrđeno'}</td>
                 <td>{row.is_substitute ? 'Zamena' : '—'}</td>
               </tr>)}</tbody>
-            </table> : <p>Na spisku nema dece.</p>}
+            </table> : <p>Na spisku nema članova.</p>}
             <p>Prisutno: {roster.filter(row => row.present).length} od {roster.length}</p>
           </>}
         </section>
