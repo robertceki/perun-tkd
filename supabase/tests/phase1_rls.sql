@@ -71,5 +71,52 @@ begin
      or (select count(*) from public.child_contacts l where l.child_id=(child_data->>'id')::uuid and l.is_primary) <> 1 then
     raise exception 'Failed aggregate save changed child or links';
   end if;
+  perform public.save_membership_fees(kid_id,array[date '2026-01-01',date '2026-02-01',date '2026-03-01'],date '2026-03-10');
+  if (select count(*) from public.membership_fees where child_id=kid_id and paid_on=date '2026-03-10'
+      and member_name='R1 Child' and registration_number='0001/A') <> 3 then
+    raise exception 'Batch payment did not preserve all three months and member details';
+  end if;
+  perform public.save_membership_fees(kid_id,array[date '2026-01-01'],null);
+  if (select count(*) from public.membership_fees where child_id=kid_id and paid_on is not null) <> 2 then
+    raise exception 'Correcting one month modified other months';
+  end if;
+  perform public.save_membership_pause(kid_id,date '2099-01-01','  Dogovor  ');
+  if not exists(select 1 from public.membership_reminder_pauses where child_id=kid_id and paused_until=date '2099-01-01' and note='Dogovor') then
+    raise exception 'Reminder pause was not saved';
+  end if;
+  perform public.save_membership_pause(kid_id,null,'');
+  if not exists(select 1 from public.membership_reminder_pauses where child_id=kid_id and paused_until is null and note='') then
+    raise exception 'Reminder pause was not cleared';
+  end if;
+  begin
+    insert into public.membership_fees values(kid_id,date '2026-04-01',null,'R1 Child','0001/A');
+    raise exception 'Direct membership fee write succeeded';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
+reset role;
+do $$
+begin
+  if (select count(*) from tkd_private.attendance_audit where entity='membership_fees' and operation='UPDATE')<>1 then
+    raise exception 'Payment correction was not audited';
+  end if;
+  if has_function_privilege('anon','public.save_membership_fees(uuid,date[],date)','EXECUTE') then
+    raise exception 'Anonymous payments RPC granted';
+  end if;
+end $$;
+select set_config('request.jwt.claim.sub', gen_random_uuid()::text, true);
+set local role authenticated;
+do $$
+begin
+  if exists(select 1 from public.membership_fees) or exists(select 1 from public.membership_reminder_pauses) then
+    raise exception 'Nontrainer can see fee records';
+  end if;
+  begin
+    perform public.save_membership_fees(gen_random_uuid(),array[date '2026-01-01'],null);
+    raise exception 'Nontrainer recorded payment';
+  exception when raise_exception then
+    if sqlerrm <> 'Pristup je dozvoljen samo aktivnim trenerima.' then raise; end if;
+  end;
+end $$;
+reset role;
 rollback;

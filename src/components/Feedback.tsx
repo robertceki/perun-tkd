@@ -10,7 +10,7 @@ export function Feedback({ errors = [], message }: { errors?: string[]; message?
 export function Field({ label, onChange, value, defaultValue, type, required, disabled, ...input }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const id = useId()
   return <TextField id={id} label={label} type={type} value={value} defaultValue={defaultValue} required={required} disabled={disabled}
-    onChange={onChange} sx={{ mb: 1.25 }} slotProps={{ htmlInput: { "aria-label": label, ...input }, inputLabel: type === 'date' || type === 'time' ? { shrink: true } : undefined }} />
+    onChange={onChange} sx={{ mb: 1.25 }} slotProps={{ htmlInput: { "aria-label": label, ...input }, inputLabel: type === 'date' || type === 'time' || type === 'month' ? { shrink: true } : undefined }} />
 }
 export function SelectField({ label, children, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; children: ReactNode }) {
   const id = useId()
