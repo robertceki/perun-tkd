@@ -273,3 +273,45 @@ test('removes a member from the group only after confirmation and retains the pr
   await expect(page.getByLabel('Glavna grupa', { exact: true })).toHaveValue('')
   await expect(page.getByLabel('Status člana', { exact: true })).toHaveValue('active')
 })
+
+test.describe('monthly membership fees', () => {
+  test.use({ initialTime: '2026-07-20T12:00:00Z' })
+
+  test('prepares an unpaid warning, pauses it, and records three months in one payment', async ({ page, calls }) => {
+    await login(page)
+    await page.getByRole('button', { name: 'Podešavanja', exact: true }).click()
+    await page.getByRole('button', { name: 'Članarine', exact: true }).click()
+    await page.getByLabel('Član', { exact: true }).selectOption(fixtureIds.ana)
+    const message = page.getByRole('textbox', { name: 'Pripremljena poruka' })
+    await expect(message).toHaveValue(/neće moći da prisustvuje treninzima/)
+    await page.getByLabel('Pauziraj obaveštenja do').fill('2026-07-25')
+    await page.getByRole('button', { name: 'Sačuvaj pauzu' }).click()
+    await expect(page.getByText('Obaveštenja su pauzirana do 2026-07-25.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ana Test', exact: true })).toHaveCount(0)
+    await expect(message).toHaveCount(0)
+    await page.getByLabel('Od meseca').fill('2026-05')
+    for (const name of [/maj/i, /jun/i, /jul/i]) await page.getByRole('checkbox', { name }).check()
+    await page.getByRole('button', { name: 'Evidentiraj uplatu' }).click()
+    await expect(page.getByText(/Plaćeno 2026-07-20/)).toHaveCount(3)
+    expect(calls.filter(call => call.name === 'save_membership_fees')).toEqual([
+      { name: 'save_membership_fees', args: { p_child_id: fixtureIds.ana, p_months: ['2026-05-01','2026-06-01','2026-07-01'], p_paid_on: '2026-07-20' } },
+    ])
+    await page.getByRole('checkbox', { name: /maj/i }).check()
+    await page.getByRole('button', { name: 'Poništi evidentiranu uplatu' }).click()
+    await expect(page.getByText(/Plaćeno 2026-07-20/)).toHaveCount(2)
+  })
+})
+
+test.describe('membership reminder on the fifteenth', () => {
+  test.use({ initialTime: '2026-07-15T12:00:00Z' })
+
+  test('prepares the reminder without the later warning', async ({ page, calls }) => {
+    await login(page)
+    await page.getByRole('button', { name: 'Podešavanja', exact: true }).click()
+    await page.getByRole('button', { name: 'Članarine', exact: true }).click()
+    await page.getByRole('button', { name: 'Ana Test', exact: true }).click()
+    await expect(page.getByText('Podsetnik od 15. u mesecu')).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'Pripremljena poruka' })).toHaveValue(/proverite uplatu/)
+    expect(calls.filter(call => call.name !== 'get_server_time')).toEqual([])
+  })
+})

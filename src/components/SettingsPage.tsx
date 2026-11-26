@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { MembershipFeesPage } from './MembershipFeesPage'
 import { Box, ButtonBase, Stack, Typography } from '@mui/material'
 import type { ClubData } from '../domain/types'
 import type { ClubController } from '../hooks/useClubData'
@@ -7,15 +9,16 @@ import { ContactsPage } from './ContactsPage'
 import { GroupsPage } from './GroupsPage'
 import { TermsPage } from './TermsPage'
 
-export type SettingsTab = 'Članovi' | 'Kontakti' | 'Grupe' | 'Raspored'
+export type SettingsTab = 'Članovi' | 'Kontakti' | 'Grupe' | 'Raspored' | 'Članarine'
 const tabs: { id: SettingsTab; label: string }[] = [
   { id: 'Članovi', label: 'Članovi' }, { id: 'Kontakti', label: 'Roditelji/staratelji' },
-  { id: 'Grupe', label: 'Grupe' }, { id: 'Raspored', label: 'Raspored termina' },
+  { id: 'Grupe', label: 'Grupe' }, { id: 'Raspored', label: 'Raspored termina' }, { id: 'Članarine', label: 'Članarine' },
 ]
 export function SettingsPage({ tab, select, data, club, navigate, today }: {
   tab: SettingsTab; select: (tab: SettingsTab) => void; data: ClubData; club: ClubController
   navigate: (page: Page) => void; today: string
 }) {
+  const [memberId, setMemberId] = useState('')
   return <>
     <Typography component="h1" variant="h4" sx={{ fontSize: { xs: '1.8rem', sm: '2.2rem' }, mb: 2.5 }}>Podešavanja</Typography>
     <Stack direction="row" spacing={1} role="group" aria-label="Podešavanja"
@@ -28,9 +31,10 @@ export function SettingsPage({ tab, select, data, club, navigate, today }: {
           fontSize: { xs: '.9375rem', sm: '.8125rem' }, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</Box>
       </ButtonBase>)}
     </Stack>
-    <div hidden={tab !== 'Članovi'}><ChildrenPage data={data} club={club} navigate={navigate} today={today} openSchedule={() => select('Raspored')} /></div>
+    <div hidden={tab !== 'Članovi'}><ChildrenPage data={data} club={club} navigate={navigate} today={today} openSchedule={() => select('Raspored')} openFees={id => { setMemberId(id); select('Članarine') }} /></div>
     <div hidden={tab !== 'Kontakti'}><ContactsPage data={data} club={club} /></div>
     <div hidden={tab !== 'Grupe'}><GroupsPage data={data} club={club} /></div>
     <div hidden={tab !== 'Raspored'}><TermsPage data={data} club={club} navigate={navigate} today={today} /></div>
+    {tab === 'Članarine' && <MembershipFeesPage data={data} club={club} today={today} memberId={memberId} selectMember={setMemberId} />}
   </>
 }

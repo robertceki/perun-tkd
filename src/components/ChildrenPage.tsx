@@ -13,7 +13,7 @@ import type { ClubController } from '../hooks/useClubData'
 import type { Page } from './AppShell'
 import { Feedback, Field, FormActions, SelectField } from './Feedback'
 
-export function ChildrenPage({ data, club, navigate, today, openSchedule }: { data: ClubData; club: ClubController; navigate: (page: Page) => void; today: string; openSchedule?: () => void }) {
+export function ChildrenPage({ data, club, navigate, today, openSchedule, openFees }: { data: ClubData; club: ClubController; navigate: (page: Page) => void; today: string; openSchedule?: () => void; openFees?: (id: string) => void }) {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('all')
@@ -81,7 +81,10 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         </Box>)}
         <Button type="button" variant="outlined" disabled={links.length >= data.contacts.length} onClick={() => setLinks([...links, { child_id: draft.id, contact_id: '', relationship: '', is_primary: links.length === 0 }])}>Poveži postojeći kontakt</Button>
       </Box><FormActions busy={club.busy} cancel={() => setDraft(null)} />
-    </fieldset></form></SettingsDetail>
+    </fieldset></form>
+    {previous && openFees && <Button type="button" variant="outlined" disabled={club.busy} sx={{ mt: 1.5 }}
+      onClick={() => openFees(previous.id)}>Evidencija članarina</Button>}
+    </SettingsDetail>
   </>
 
   return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Članovi</Typography>

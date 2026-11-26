@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Child, ChildContact, ClubData, CompetitionClass, Contact, Group, TermAssignment, TrainingSession, SessionAttendance, WeightCategory, WeeklyTerm } from '../domain/types'
+import type { Child, ChildContact, ClubData, CompetitionClass, Contact, Group, TermAssignment, TrainingSession, SessionAttendance, WeightCategory, WeeklyTerm, MembershipFee, MembershipReminderPause } from '../domain/types'
 import { validateContact, validateGroup } from '../domain/validation'
 import { supabase } from './supabase'
 
@@ -17,6 +17,13 @@ export function createClubRepository(client: SupabaseClient) {
       if (data.length < 500) return result
     }
   }
+  async function feeRows<T>(table: string, order: string) {
+    try { return await rows<T>(table, order) }
+    catch (cause) {
+      if (cause && typeof cause === 'object' && 'code' in cause && (cause.code === 'PGRST205' || cause.code === '42P01')) return undefined
+      throw cause
+    }
+  }
   async function rpc(name: string, args: Record<string, unknown> = {}) {
     const { data, error } = await client.rpc(name, args)
     if (error) throw error
@@ -24,13 +31,14 @@ export function createClubRepository(client: SupabaseClient) {
   }
   return {
     async load(): Promise<ClubData> {
-      const [trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses] = await Promise.all([
+      const [trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses, membershipFees, membershipPauses] = await Promise.all([
         rows<ClubData['trainers'][number]>('trainers', 'id'), rows<Group>('groups', 'id'), rows<Contact>('contacts', 'id'), rows<Child>('children', 'id'),
         rows<ChildContact>('child_contacts', 'child_id,contact_id'), rows<WeeklyTerm>('weekly_terms', 'id'), rows<TermAssignment>('term_assignments', 'term_id,child_id,valid_from'),
         rows<TrainingSession>('training_sessions', 'id'), rows<SessionAttendance>('session_attendance', 'session_id,child_id'),
         rows<WeightCategory>('weight_categories', 'age_category,sex,sort_order,id'), rows<CompetitionClass>('competition_classes', 'id'),
+        feeRows<MembershipFee>('membership_fees', 'child_id,fee_month'), feeRows<MembershipReminderPause>('membership_reminder_pauses', 'child_id'),
       ])
-      return { trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses }
+      return { trainers, groups, contacts, children, childContacts, terms, assignments, sessions, attendance, weightCategories, competitionClasses, membershipFees, membershipPauses }
     },
     async ensureSession(sessionDate: string, termId: string): Promise<TrainingSession> {
       return await rpc('ensure_session', { p_session_date: sessionDate, p_term_id: termId }) as TrainingSession
@@ -48,6 +56,12 @@ export function createClubRepository(client: SupabaseClient) {
     },
     async cancelEnrollment(termId: string, childId: string, validFrom: string): Promise<void> {
       await rpc('cancel_enrollment', { p_term_id: termId, p_child_id: childId, p_valid_from: validFrom })
+    },
+    async saveMembershipFees(childId: string, months: string[], paidOn: string | null): Promise<void> {
+      await rpc('save_membership_fees', { p_child_id: childId, p_months: months, p_paid_on: paidOn })
+    },
+    async saveMembershipPause(childId: string, until: string | null, note: string): Promise<void> {
+      await rpc('save_membership_pause', { p_child_id: childId, p_paused_until: until, p_note: note })
     },
     async getServerTime(): Promise<string> { return await rpc('get_server_time') as string },
     async saveContact(contact: Contact): Promise<void> {

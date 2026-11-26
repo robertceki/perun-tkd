@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
-import type { TrainingSession, SessionAttendance, Child, WeightCategory } from '../../src/domain/types'
+import type { TrainingSession, SessionAttendance, Child, WeightCategory, MembershipFee, MembershipReminderPause } from '../../src/domain/types'
 
 export { expect }
 export const today = '2026-07-06'
@@ -72,7 +72,7 @@ export const test = base.extend<{
       { id: 'cadets:F:-29', age_category: 'cadets', sex: 'F', signed_kg: -29, sort_order: 1 },
       { id: 'cadets:M:-33', age_category: 'cadets', sex: 'M', signed_kg: -33, sort_order: 1 },
     ]
-    const tables = { weight_categories: weightCategories, competition_classes: [{ id: 'A' }, { id: 'B' }], trainers: [trainer], groups, contacts, children, child_contacts: links, weekly_terms: terms,
+    const tables = { membership_fees: [] as MembershipFee[], membership_reminder_pauses: [] as MembershipReminderPause[], weight_categories: weightCategories, competition_classes: [{ id: 'A' }, { id: 'B' }], trainers: [trainer], groups, contacts, children, child_contacts: links, weekly_terms: terms,
       term_assignments: assignments, training_sessions: sessions, session_attendance: attendance }
     const user = { id: trainer.user_id, aud: 'authenticated', role: 'authenticated', email: 'trainer@example.invalid',
       app_metadata: {}, user_metadata: {}, created_at: now }
@@ -172,6 +172,23 @@ export const test = base.extend<{
         }
         if (date >= belgrade.format(instant).slice(0, 10)) addGroupMembers(row)
         return reply(row)
+      }
+      if (name === 'save_membership_fees') {
+        const person = children.find(row => row.id === args.p_child_id)!
+        for (const month of args.p_months as string[]) {
+          const record = tables.membership_fees.find(row => row.child_id === person.id && row.fee_month === month)
+          if (record) record.paid_on = args.p_paid_on
+          else tables.membership_fees.push({ child_id: person.id, fee_month: month, paid_on: args.p_paid_on,
+            member_name: person.first_name + ' ' + person.last_name, registration_number: person.registration_number ?? null })
+        }
+        return reply(null)
+      }
+      if (name === 'save_membership_pause') {
+        const record = tables.membership_reminder_pauses.find(row => row.child_id === args.p_child_id)
+        const updated = { child_id: args.p_child_id, paused_until: args.p_paused_until, note: args.p_note }
+        if (record) Object.assign(record, updated)
+        else tables.membership_reminder_pauses.push(updated)
+        return reply(null)
       }
       if (name === 'save_child') {
         upsert(children, args.p_child)

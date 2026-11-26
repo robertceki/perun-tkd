@@ -72,6 +72,10 @@ export function useClubData(trainerKey: string | null) {
   }, false), [save])
   return { save, ensureSession, busy: saving || loading || stale, cancelEnrollment: (termId: string, childId: string, validFrom: string) => save(() => repository!.cancelEnrollment(termId, childId, validFrom)), data: trainerKey && snapshot?.key === trainerKey ? snapshot.data : null, loading, saving, error, notice, reload,
     deleteTerm: (id: string) => save(() => repository!.deleteTerm(id)),
+    saveMembershipFees: (childId: string, months: string[], paidOn: string | null) =>
+      save(() => repository!.saveMembershipFees(childId, months, paidOn)),
+    saveMembershipPause: (childId: string, until: string | null, note: string) =>
+      save(() => repository!.saveMembershipPause(childId, until, note)),
     deleteGroup: (id: string) => save(() => repository!.deleteGroup(id)),
     removeGroupMember: (groupId: string, childId: string) => save(() => repository!.removeGroupMember(groupId, childId)),
     saveContact: (value: Contact) => save(() => repository!.saveContact(value)), saveGroup: (value: Group) => save(() => repository!.saveGroup(value)), saveChild: (value: Child, links: ChildContact[]) => save(() => repository!.saveChild(value, links)), saveTerm: (value: WeeklyTerm, assignments: TermAssignment[]) => save(() => repository!.saveTerm(value, assignments)) }
