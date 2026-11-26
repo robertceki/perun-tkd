@@ -168,7 +168,8 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
     const session = term.session
     if (!session) return [term.termId, plannedRoster(data, term, today).length]
     const ids = new Set((data.attendance ?? []).filter(row => row.session_id === session.id).map(row => row.child_id))
-    if (clock.instant !== undefined && clock.instant < term.startsAt && !session.completed_at && !session.cancelled_at) {
+    if (clock.instant !== undefined && clock.instant < term.startsAt && !session.completed_at && !session.cancelled_at &&
+        data.terms.some(schedule => schedule.id === session.term_id)) {
       for (const child of groupRoster(data, session.group_id)) ids.add(child.id)
     }
     return [term.termId, ids.size]

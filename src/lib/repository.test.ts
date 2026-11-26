@@ -33,14 +33,14 @@ test('sends dated attendance RPCs and preserves server responses and errors', as
   ])
 })
 
-test('deleteTerm uses protected RPC and preserves linked-history errors', async () => {
-  const linked = { code: 'P0001', message: 'Termin ima istoriju i ne može se obrisati.' }
-  const rpc = vi.fn().mockResolvedValueOnce({ data: null, error: null }).mockResolvedValueOnce({ data: null, error: linked })
+test('deleteTerm uses protected RPC and preserves database errors', async () => {
+  const missing = { code: 'P0001', message: 'Termin ne postoji.' }
+  const rpc = vi.fn().mockResolvedValueOnce({ data: null, error: null }).mockResolvedValueOnce({ data: null, error: missing })
   const repo = createClubRepository({ rpc } as unknown as SupabaseClient)
   await repo.deleteTerm('unused-term')
-  await expect(repo.deleteTerm('used-term')).rejects.toBe(linked)
+  await expect(repo.deleteTerm('missing-term')).rejects.toBe(missing)
   expect(rpc.mock.calls).toEqual([
-    ['delete_unused_term', { p_term_id: 'unused-term' }],
-    ['delete_unused_term', { p_term_id: 'used-term' }],
+    ['delete_term', { p_term_id: 'unused-term' }],
+    ['delete_term', { p_term_id: 'missing-term' }],
   ])
 })

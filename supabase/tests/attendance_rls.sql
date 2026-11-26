@@ -384,6 +384,59 @@ begin
   end;
 end $$;
 reset role;
+
+select set_config('request.jwt.claim.sub', current_setting('tkd.r1_trainer_uid'), true);
+set local role authenticated;
+do $$
+declare
+  sid uuid := current_setting('tkd.r1_session')::uuid;
+  recorded public.training_sessions;
+  saved_schedule public.weekly_terms;
+  attendance_before jsonb;
+begin
+  select * into strict recorded from public.training_sessions where id=sid;
+  select * into strict saved_schedule from public.weekly_terms where id = recorded.term_id;
+  select jsonb_agg(to_jsonb(a) order by a.child_id) into attendance_before
+    from public.session_attendance a where a.session_id=sid;
+  perform public.delete_term(recorded.term_id);
+  if exists(select 1 from public.weekly_terms where id=recorded.term_id)
+     or exists(select 1 from public.term_assignments where term_id=recorded.term_id) then
+    raise exception 'Deleted schedule or live enrollments remained';
+  end if;
+  if to_jsonb(public.ensure_session(recorded.session_date, recorded.term_id)) is distinct from to_jsonb(recorded)
+     or (select jsonb_agg(to_jsonb(a) order by a.child_id) from public.session_attendance a where a.session_id=sid)
+        is distinct from attendance_before then
+    raise exception 'Deleting a schedule changed recorded training or attendance';
+  end if;
+  begin
+    perform public.ensure_session(recorded.session_date + 7, recorded.term_id);
+    raise exception 'Deleted schedule created a new training';
+  exception when raise_exception then
+    if sqlerrm <> 'Termin ne postoji.' then raise; end if;
+  end;
+  begin
+    insert into public.weekly_terms(id,group_id,weekday,starts_at,ends_at,trainer_id)
+      values(saved_schedule.id,saved_schedule.group_id,saved_schedule.weekday,saved_schedule.starts_at,saved_schedule.ends_at,saved_schedule.trainer_id);
+    raise exception 'A historical schedule ID was reused';
+  exception when raise_exception then
+    if sqlerrm <> 'Identifikator je već sačuvan u istoriji treninga.' then raise; end if;
+  end;
+end $$;
+reset role;
+
+do $$
+declare archived_term uuid := (select term_id from public.training_sessions where id=current_setting('tkd.r1_session')::uuid);
+begin
+  if not exists(select 1 from tkd_private.attendance_audit where entity='weekly_terms' and operation='DELETE'
+      and before_row->>'id'=archived_term::text and after_row is null)
+    or not exists(select 1 from tkd_private.attendance_audit where entity='term_assignments' and operation='DELETE'
+      and before_row->>'term_id'=archived_term::text and after_row is null) then
+    raise exception 'Missing schedule or enrollment deletion history';
+  end if;
+  if has_function_privilege('anon','public.delete_term(uuid)','EXECUTE') then
+    raise exception 'Anonymous delete RPC granted';
+  end if;
+end $$;
 rollback;
 
 

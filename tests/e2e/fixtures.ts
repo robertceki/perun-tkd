@@ -148,7 +148,10 @@ export const test = base.extend<{
       if (name === 'ensure_session') {
         const schedule = terms.find(row => row.id === args.p_term_id)
         const date = args.p_session_date as string
-        if (!schedule) return reply({ message: 'Termin ne postoji.' }, 400)
+        if (!schedule) {
+          const archived = sessions.find(row => row.term_id === args.p_term_id && row.session_date === date)
+          return archived ? reply(archived) : reply({ message: 'Termin ne postoji.' }, 400)
+        }
         // Modern Belgrade uses these two offsets. Prefer standard time on a repeated hour.
         const start = ['+01:00', '+02:00'].map(offset => Date.parse(`${date}T${schedule.starts_at}${offset}`))
           .find(candidate => belgrade.format(candidate) === `${date} ${schedule.starts_at}`)
@@ -180,6 +183,15 @@ export const test = base.extend<{
         upsert(terms, { trainer_id: trainer.id, ...args.p_term })
         assignments.push(...args.p_assignments.filter((entry: typeof assignments[number]) => !assignments.some(row =>
           row.term_id === entry.term_id && row.child_id === entry.child_id && row.valid_from === entry.valid_from)))
+        return reply(null)
+      }
+      if (name === 'delete_term') {
+        const index = terms.findIndex(row => row.id === args.p_term_id)
+        if (index < 0) return reply({ message: 'Termin ne postoji.' }, 400)
+        terms.splice(index, 1)
+        for (let i = assignments.length - 1; i >= 0; i--) {
+          if (assignments[i].term_id === args.p_term_id) assignments.splice(i, 1)
+        }
         return reply(null)
       }
       if (name === 'cancel_enrollment') {
