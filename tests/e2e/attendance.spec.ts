@@ -1,6 +1,8 @@
 import type { Locator, Page } from '@playwright/test'
 import { test, expect, login, today, prior, fixtureIds, sessionId } from './fixtures'
 
+test.use({ substituteOutsideGroup: true })
+
 function openTime(scope: Page | Locator, time: string) {
   const name = new RegExp(time)
   return scope.getByRole('button', { name }).or(scope.getByRole('link', { name }))
@@ -71,6 +73,8 @@ test('future preview and cancelled attendance are read-only', async ({ page, cal
   const main = page.getByRole('main')
   await openTime(main, '20:00').click()
   await expect(main.getByText(/Prozivka se otvara u 19:00/)).toBeVisible()
+  await expect(main.getByText('Ana Test', { exact: true }).filter({ visible: true })).toBeVisible()
+  await expect(main.getByText('Iva Test', { exact: true }).filter({ visible: true })).toHaveCount(0)
   await expect(main.getByRole('checkbox')).toHaveCount(0)
   expect(calls.filter(call => call.name !== 'get_server_time')).toEqual([])
 
@@ -93,9 +97,9 @@ test('future preview and cancelled attendance are read-only', async ({ page, cal
 
 
 for (const scenario of [
-  { label: 'ordinary evening', date: today, time: '18:00:00', weekday: 1, before: '2026-07-06T14:59:00Z', opening: '2026-07-06T15:00:00Z', local: '17:00', openingDate: '6.7.26.' },
-  { label: 'across Belgrade midnight', date: today, time: '00:30:00', weekday: 1, before: '2026-07-05T21:29:00Z', opening: '2026-07-05T21:30:00Z', local: '23:30', openingDate: '5.7.26.' },
-  { label: 'across the Belgrade spring DST jump', date: '2026-03-29', time: '03:30:00', weekday: 7, before: '2026-03-29T00:29:00Z', opening: '2026-03-29T00:30:00Z', local: '01:30', openingDate: '29.3.26.' },
+  { label: 'ordinary evening', date: today, time: '18:00:00', weekday: 1, before: '2026-07-06T14:59:00Z', opening: '2026-07-06T15:00:00Z', local: '17:00', openingDate: /6\.\s*7\.\s*(?:20)?26\./ },
+  { label: 'across Belgrade midnight', date: today, time: '00:30:00', weekday: 1, before: '2026-07-05T21:29:00Z', opening: '2026-07-05T21:30:00Z', local: '23:30', openingDate: /5\.\s*7\.\s*(?:20)?26\./ },
+  { label: 'across the Belgrade spring DST jump', date: '2026-03-29', time: '03:30:00', weekday: 7, before: '2026-03-29T00:29:00Z', opening: '2026-03-29T00:30:00Z', local: '01:30', openingDate: /29\.\s*3\.\s*(?:20)?26\./ },
 ]) {
   test.describe(scenario.label, () => {
     test.use({ initialTime: scenario.before, boundaryTerm: { time: scenario.time, weekday: scenario.weekday } })
@@ -108,8 +112,10 @@ for (const scenario of [
       await page.getByRole('navigation').getByRole('button', { name: 'Termini', exact: true }).click()
       await page.getByLabel(/^(?:Izaberite |Izabrani )?datum$/i).filter({ visible: true }).fill(scenario.date)
       await openTime(main, scenario.time.slice(0, 5)).click()
-      await expect(main.getByText(`Prozivka se otvara u ${scenario.local} (${scenario.openingDate}).`)).toBeVisible()
-      await expect(main.getByRole('listitem').filter({ hasText: 'Ana Test' })).toBeVisible()
+      const openingNotice = main.getByRole('status').filter({ hasText: /Prozivka se otvara u/ })
+      await expect(openingNotice).toContainText(scenario.local)
+      await expect(openingNotice).toContainText(scenario.openingDate)
+      await expect(main.getByText('Ana Test', { exact: true }).filter({ visible: true })).toBeVisible()
       await expect(main.getByRole('checkbox')).toHaveCount(0)
       expect(calls.filter(call => call.name !== 'get_server_time')).toEqual([])
 
@@ -193,4 +199,69 @@ test.describe('attendance with a medical exam expiring tomorrow', () => {
       { name: 'set_presence', args: { p_session_id: sessionId(fixtureIds.started, today), p_child_id: fixtureIds.ana, p_present: true } },
     ])
   })
+})
+
+test.describe('already-open group roster', () => {
+  test.use({ initialTime: '2026-07-06T17:30:00Z', seedOpenRoster: true })
+
+  test('adds an unassigned group member once and preserves recorded substitutes', async ({ page, calls }) => {
+    await login(page)
+    const main = page.getByRole('main')
+    await openTime(main, '20:00').click()
+    await expect(main.getByRole('checkbox', { name: 'Ana Test', exact: true })).toHaveCount(1)
+    await expect(main.getByRole('checkbox', { name: 'Ana Test', exact: true })).not.toBeChecked()
+    await expect(main.getByRole('checkbox', { name: 'Iva Test (zamena)', exact: true })).toBeChecked()
+    await main.getByRole('button', { name: 'Nazad na termine' }).click()
+    await openTime(main, '20:00').click()
+    await expect(main.getByRole('checkbox', { name: 'Ana Test', exact: true })).toHaveCount(1)
+    await expect(main.getByRole('checkbox', { name: 'Iva Test (zamena)', exact: true })).toBeChecked()
+    expect(calls.filter(call => call.name === 'ensure_session')).toHaveLength(1)
+  })
+})
+
+test('restores a cancelled training only after confirmation and keeps completed attendance', async ({ page, calls }) => {
+  await login(page)
+  const main = page.getByRole('main')
+  await openTime(main, '18:00').click()
+  const presence = main.getByRole('checkbox', { name: 'Ana Test' })
+  await presence.check()
+  await main.getByRole('button', { name: 'Završi prozivku' }).click()
+  await expect(main.getByRole('status').filter({ hasText: 'Prozivka je završena.' })).toBeVisible()
+  await main.getByRole('button', { name: 'Otkaži trening' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Otkaži', exact: true }).click()
+  await expect(presence).toBeDisabled()
+  const dialog = page.getByRole('dialog', { name: 'Vrati otkazani trening?' })
+  await main.getByRole('button', { name: 'Vrati trening' }).click()
+  await dialog.getByRole('button', { name: 'Nazad' }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(presence).toBeDisabled()
+  expect(calls.filter(call => call.name === 'restore_session')).toHaveLength(0)
+  await main.getByRole('button', { name: 'Vrati trening' }).click()
+  await dialog.getByRole('button', { name: 'Vrati trening' }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(presence).toBeChecked()
+  await expect(presence).toBeEnabled()
+  await expect(main.getByRole('status').filter({ hasText: 'Prozivka je završena.' })).toBeVisible()
+  expect(calls.filter(call => call.name === 'restore_session')).toEqual([
+    { name: 'restore_session', args: { p_session_id: sessionId(fixtureIds.started, today), p_cancelled_at: '2026-07-06T16:30:00Z' } },
+  ])
+})
+
+test('daily print keeps the registration number captured with attendance', async ({ page, calls }) => {
+  await login(page)
+  const navigation = page.getByRole('navigation')
+  await openTime(page.getByRole('main'), '18:00').click()
+  await expect(page.getByRole('checkbox', { name: 'Ana Test' })).toBeVisible()
+  await navigation.getByRole('button', { name: 'Podešavanja', exact: true }).click()
+  await page.getByRole('button', { name: 'Uredi dete Ana Test' }).click()
+  await expect(page.getByLabel('Registarski broj', { exact: true })).toHaveValue('0007/A')
+  await page.getByLabel('Registarski broj', { exact: true }).fill('0010/A')
+  await page.getByLabel('Pol', { exact: true }).selectOption('F')
+  await page.getByRole('button', { name: 'Sačuvaj', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Uredi dete Ana Test' })).toBeVisible()
+  expect(calls.find(call => call.name === 'save_child')?.args.p_child).toMatchObject({ registration_number: '0010/A' })
+  await navigation.getByRole('button', { name: 'Termini', exact: true }).click()
+  const printTable = page.locator('.attendance-print table')
+  await expect(printTable.locator('th')).toHaveText(['No', 'Registarski broj', 'Ime i prezime', 'Prisustvo', 'Napomena'])
+  await expect(printTable.locator('tbody td')).toHaveText(['1', '0007/A', 'Ana Test', 'Nije potvrđeno', '—'])
 })

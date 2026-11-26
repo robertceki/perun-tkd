@@ -88,7 +88,7 @@ begin
   insert into public.contacts(id,first_name,last_name,phone) values (parent,'Synthetic','Parent','000');
   draft := jsonb_build_object('id',kid,'first_name','Synthetic','last_name','Child',
     'birth_date',make_date(extract(year from today)::int-12,12,31),'status','active',
-    'main_group_id',main,'competition_group_id',competition,'address','','belt','','member_type','competitor');
+    'main_group_id',main,'competition_group_id',competition,'address','','belt','','member_type','competitor','registration_number','0001/C');
   links := jsonb_build_array(jsonb_build_object('child_id',kid,'contact_id',parent,'relationship','parent','is_primary',true));
   begin
     perform public.save_child(draft,links);
@@ -117,9 +117,9 @@ begin
     raise exception 'Competitor profile did not persist';
   end if;
 
-  insert into public.weekly_terms(id,group_id,weekday,starts_at,ends_at,trainer_id,valid_from)
-  values (term,competition,extract(isodow from starts)::int,'09:00','10:00',trainer,starts),
-         (second_term,competition,extract(isodow from starts)::int,'11:00','12:00',trainer,starts);
+  insert into public.weekly_terms(id,group_id,weekday,starts_at,ends_at,trainer_id)
+  values (term,competition,extract(isodow from starts)::int,'09:00','10:00',trainer),
+         (second_term,competition,extract(isodow from starts)::int,'11:00','12:00',trainer);
   insert into public.term_assignments(term_id,child_id,valid_from) values (term,kid,starts);
   perform public.ensure_session(starts,term);
   begin

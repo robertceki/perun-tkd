@@ -44,6 +44,7 @@ declare
   other_grp uuid := gen_random_uuid();
   kid uuid := gen_random_uuid();
   substitute uuid := gen_random_uuid();
+  late_member uuid := gen_random_uuid();
   parent_id uuid := gen_random_uuid();
   term uuid := gen_random_uuid();
   invalid_term uuid := gen_random_uuid();
@@ -61,6 +62,7 @@ declare
   first_call timestamptz := clock_timestamp();
   original public.training_sessions;
   reopened public.training_sessions;
+  cancelled_snapshot public.training_sessions;
   kid_data jsonb;
   term_data jsonb;
   stmt text;
@@ -78,10 +80,10 @@ begin
   insert into public.groups(id,name,kind) values (grp,'R1 original group','main'),(other_grp,'R1 other group','main');
   insert into public.contacts(id,first_name,last_name,phone) values (parent_id,'R1','Parent','000');
   kid_data := jsonb_build_object('id',kid,'first_name','Original','last_name','Child','birth_date','2015-01-01',
-    'status','active','main_group_id',grp,'address','','belt','','sex','F','member_type','recreational');
+    'status','active','main_group_id',grp,'address','','belt','','sex','F','member_type','recreational','registration_number','0007/A');
   perform public.save_child(kid_data,jsonb_build_array(jsonb_build_object(
     'child_id',kid,'contact_id',parent_id,'relationship','parent','is_primary',true)));
-  perform public.save_child(kid_data || jsonb_build_object('id',substitute,'first_name','Substitute'),
+  perform public.save_child(kid_data || jsonb_build_object('id',substitute,'first_name','Substitute','registration_number','0008/A'),
     jsonb_build_array(jsonb_build_object('child_id',substitute,'contact_id',parent_id,'relationship','parent','is_primary',true)));
 
   term_data := jsonb_build_object('id',term,'group_id',grp,'weekday',1,'starts_at','18:00','ends_at','19:00',
@@ -163,7 +165,20 @@ begin
         raise exception 'RPC did not create an audited session inside the opening window';
       end if;
 
+      if not exists(select 1 from public.session_attendance where session_id=window_session.id
+        and child_id=kid and not present and not is_substitute) then
+        raise exception 'An active child from the group without an explicit enrollment is missing';
+      end if;
       perform public.set_presence(window_session.id,substitute,true);
+      perform public.save_child(kid_data || jsonb_build_object('id',late_member,'first_name','Late member','registration_number','0009/A'),
+        jsonb_build_array(jsonb_build_object('child_id',late_member,'contact_id',parent_id,'relationship','parent','is_primary',true)));
+      perform public.ensure_session(wall_start::date,window_term);
+      perform public.ensure_session(wall_start::date,window_term);
+      if (select count(*) from public.session_attendance where session_id=window_session.id and child_id=late_member) <> 1
+         or not exists(select 1 from public.session_attendance where session_id=window_session.id and child_id=late_member and not present and not is_substitute)
+         or not exists(select 1 from public.session_attendance where session_id=window_session.id and child_id=substitute and present) then
+        raise exception 'Pre-start roster refresh did not preserve attendance or include the new member once';
+      end if;
       perform public.add_substitute(window_session.id,kid);
       update public.session_attendance set present=true, updated_by=gen_random_uuid(),
         updated_at='2000-01-01T00:00:00Z' where session_id=window_session.id and child_id=kid;
@@ -204,6 +219,12 @@ begin
   perform set_config('tkd.r1_window_session',window_session.id::text,true);
 
   original := public.ensure_session(past,term);
+  perform public.save_child(jsonb_build_object('id',kid,'registration_number','0010/A'),
+    jsonb_build_array(jsonb_build_object('child_id',kid,'contact_id',parent_id,'relationship','parent','is_primary',true)));
+  if not exists(select 1 from public.session_attendance where session_id=original.id
+    and child_id=kid and child_registration_number='0007/A') then
+    raise exception 'Existing attendance did not keep its captured registration number';
+  end if;
   if original.starts_at_utc is distinct from expected_start or original.created_by is distinct from trainer then
     raise exception 'Incorrect stored start or creator';
   end if;
@@ -253,6 +274,21 @@ begin
     end;
   end loop;
 
+  select * into strict cancelled_snapshot from public.training_sessions where id=original.id;
+  begin
+    perform public.restore_session(original.id,cancelled_snapshot.cancelled_at - interval '1 minute');
+    raise exception 'Stale restore succeeded';
+  exception when raise_exception then
+    if sqlerrm <> 'Status treninga se promenio. Ponovo učitajte podatke.' then raise; end if;
+  end;
+  perform public.restore_session(original.id,cancelled_snapshot.cancelled_at);
+  perform public.restore_session(original.id,cancelled_snapshot.cancelled_at);
+  if not exists(select 1 from public.training_sessions where id=original.id
+      and cancelled_at is null and completed_at=cancelled_snapshot.completed_at)
+    or (select count(*) from public.session_attendance where session_id=original.id and present) <> 2 then
+    raise exception 'Restore lost completion or attendance';
+  end if;
+
   begin
     update public.children set status='inactive', main_group_id=other_grp where id=kid;
     raise exception 'Live future enrollment did not block deactivation/move';
@@ -289,6 +325,17 @@ begin
         and a.actor_id=s.created_by and a.happened_at >= s.created_at
         and a.before_row->>'cancelled_at' is null and a.after_row->>'cancelled_at' is not null) then
     raise exception 'Missing trusted cancellation audit';
+  end if;
+
+  if not exists(select 1 from tkd_private.attendance_audit a
+      join public.training_sessions s on s.id=session_id
+      where a.entity='training_sessions' and a.after_row->>'id'=session_id::text
+        and a.actor_id=s.created_by and a.before_row->>'cancelled_at' is not null
+        and a.after_row->>'cancelled_at' is null) then
+    raise exception 'Missing trusted restore audit';
+  end if;
+  if has_function_privilege('anon','public.restore_session(uuid,timestamptz)','EXECUTE') then
+    raise exception 'Anonymous restore RPC granted';
   end if;
 
   if not exists(select 1 from tkd_private.attendance_audit a

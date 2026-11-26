@@ -7,6 +7,7 @@ import { useClubData } from './hooks/useClubData'
 import { AppShell, type Page } from './components/AppShell'
 import { AuthScreen } from './components/AuthScreen'
 import { AttendancePage } from './components/AttendancePage'
+import { groupRoster, plannedRoster } from './domain/attendanceRoster'
 import { TermList, type DatedTerm } from './components/DashboardPage'
 import { SettingsPage, type SettingsTab } from './components/SettingsPage'
 import { PendingStatus, Feedback, Field } from './components/Feedback'
@@ -162,11 +163,16 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   const todayTerms = data && today ? datedTerms(data, today, today) : []
   const now = clock.lastInstant
   const next = now === undefined ? undefined : todayTerms.find(term => term.startsAt >= now && !term.session?.cancelled_at)?.termId
-  const counts = (terms: DatedTerm[]) => Object.fromEntries(terms.map(term => [term.termId,
-    term.session ? (data?.attendance ?? []).filter(row => row.session_id === term.session?.id).length
-      : new Set(data?.assignments.filter(row => row.term_id === term.termId && row.valid_from <= term.date &&
-        (!row.valid_to || row.valid_to >= term.date) && (!row.cancelled_at || Date.parse(row.cancelled_at) > term.startsAt)).map(row => row.child_id)).size,
-  ]))
+  const counts = (terms: DatedTerm[]) => Object.fromEntries(terms.map(term => {
+    if (!data) return [term.termId, 0]
+    const session = term.session
+    if (!session) return [term.termId, plannedRoster(data, term, today).length]
+    const ids = new Set((data.attendance ?? []).filter(row => row.session_id === session.id).map(row => row.child_id))
+    if (clock.instant !== undefined && clock.instant < term.startsAt && !session.completed_at && !session.cancelled_at) {
+      for (const child of groupRoster(data, session.group_id)) ids.add(child.id)
+    }
+    return [term.termId, ids.size]
+  }))
   return <AppShell page={page} navigate={navigate} trainer={trainer} busy={club.saving || authBusy} logout={logout}>
     <Feedback errors={[authError, club.error].filter(Boolean)} message={club.notice} />
     {club.loading && <PendingStatus>Učitavanje podataka…</PendingStatus>}

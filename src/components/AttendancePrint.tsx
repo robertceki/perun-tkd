@@ -30,9 +30,11 @@ export function AttendancePrint({ date, terms, attendance }: {
           <h2>{term.group} · {formatTime(term.start)}–{formatTime(term.end)}</h2>
           {session?.cancelled_at ? <p>Trening je otkazan.</p> : !session ? <p>Prisustvo nije evidentirano.</p> : <>
             {roster.length ? <table>
-              <thead><tr><th scope="col">R. br.</th><th scope="col">Ime i prezime</th><th scope="col">Prisustvo</th><th scope="col">Napomena</th></tr></thead>
+              <thead><tr><th scope="col">No</th><th scope="col">Registarski broj</th><th scope="col">Ime i prezime</th><th scope="col">Prisustvo</th><th scope="col">Napomena</th></tr></thead>
               <tbody>{roster.map((row, index) => <tr key={row.child_id}>
-                <td>{index + 1}</td><td>{row.child_first_name} {row.child_last_name}</td>
+                <td>{index + 1}</td>
+                <td>{row.child_registration_number ?? '—'}</td>
+                <td>{row.child_first_name} {row.child_last_name}</td>
                 <td>{row.present ? 'Prisutan' : completed ? 'Odsutan' : 'Nije potvrđeno'}</td>
                 <td>{row.is_substitute ? 'Zamena' : '—'}</td>
               </tr>)}</tbody>
