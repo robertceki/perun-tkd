@@ -459,6 +459,62 @@ begin
     raise exception 'Anonymous delete RPC granted';
   end if;
 end $$;
+
+set local role authenticated;
+do $$
+declare
+  recorded public.training_sessions;
+  group_id_to_delete uuid;
+  affected_member_ids uuid[];
+  terms_to_delete uuid[];
+  sessions_before jsonb;
+  attendance_before jsonb;
+begin
+  select * into strict recorded from public.training_sessions where id=current_setting('tkd.r1_session')::uuid;
+  group_id_to_delete := recorded.group_id;
+  select array_agg(id) into affected_member_ids from public.children where main_group_id=group_id_to_delete or competition_group_id=group_id_to_delete;
+  select array_agg(id) into terms_to_delete from public.weekly_terms where group_id=group_id_to_delete;
+  if coalesce(cardinality(affected_member_ids),0)=0 or coalesce(cardinality(terms_to_delete),0)<2 then
+    raise exception 'Expected group removal fixtures with members and multiple weekly terms';
+  end if;
+  select jsonb_agg(to_jsonb(s) order by s.id) into sessions_before from public.training_sessions s where s.group_id=group_id_to_delete;
+  select jsonb_agg(to_jsonb(a) order by a.session_id,a.child_id) into attendance_before
+    from public.session_attendance a join public.training_sessions s on s.id=a.session_id where s.group_id=group_id_to_delete;
+
+  perform public.delete_group(group_id_to_delete);
+  if exists(select 1 from public.groups where id=group_id_to_delete)
+    or exists(select 1 from public.weekly_terms where id=any(terms_to_delete))
+    or exists(select 1 from public.term_assignments where term_id=any(terms_to_delete))
+    or exists(select 1 from public.children where main_group_id=group_id_to_delete or competition_group_id=group_id_to_delete)
+    or (select count(*) from public.children where id=any(affected_member_ids))<>cardinality(affected_member_ids) then
+    raise exception 'Group deletion did not fully unlink schedules and members while retaining profiles';
+  end if;
+  if (select jsonb_agg(to_jsonb(s) order by s.id) from public.training_sessions s where s.group_id=group_id_to_delete)
+      is distinct from sessions_before
+    or (select jsonb_agg(to_jsonb(a) order by a.session_id,a.child_id)
+        from public.session_attendance a join public.training_sessions s on s.id=a.session_id where s.group_id=group_id_to_delete)
+      is distinct from attendance_before then
+    raise exception 'Group deletion modified recorded training or attendance';
+  end if;
+  begin
+    insert into public.groups(id,name,kind) values (group_id_to_delete,'Reused group','main');
+    raise exception 'A historical group ID was reused';
+  exception when raise_exception then
+    if sqlerrm <> 'Identifikator grupe je već sačuvan u istoriji treninga.' then raise; end if;
+  end;
+end $$;
+reset role;
+do $$
+begin
+  if has_function_privilege('anon','public.delete_group(uuid)','EXECUTE') then
+    raise exception 'Anonymous group delete RPC granted';
+  end if;
+  if not exists(select 1 from tkd_private.attendance_audit a join public.training_sessions s
+      on a.before_row->>'id'=s.group_id::text where a.entity='groups' and a.operation='DELETE'
+      and s.id=current_setting('tkd.r1_session')::uuid) then
+    raise exception 'Missing group deletion history';
+  end if;
+end $$;
 rollback;
 
 

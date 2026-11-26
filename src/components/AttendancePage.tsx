@@ -160,10 +160,10 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
         {canStart && !session.cancelled_at && <>
           <Stack direction="row" useFlexGap flexWrap="wrap" gap={1} mt={2}>
             {!session.completed_at && <Button variant="contained" disabled={busy || checking || !!presenceDraft} onClick={() => void change(() => repository!.completeSession(session.id))}>Završi prozivku</Button>}
-            <Button variant="outlined" color="secondary" disabled={busy || checking || !!presenceDraft} aria-expanded={substituteOpen} onClick={() => setSubstituteOpen(!substituteOpen)}>Dodaj zamenu</Button>
+            {sessionGroup && <Button variant="outlined" color="secondary" disabled={busy || checking || !!presenceDraft} aria-expanded={substituteOpen} onClick={() => setSubstituteOpen(!substituteOpen)}>Dodaj zamenu</Button>}
             {canCancel && <Button color="error" aria-label="Otkaži trening" sx={{ ml: 'auto' }} disabled={busy || checking || !!presenceDraft} onClick={() => setConfirmCancel(true)}>Otkaži</Button>}
           </Stack>
-          {substituteOpen && <Card sx={{ p: { xs: 2, sm: 3 }, mt: 1.5 }}>
+          {sessionGroup && substituteOpen && <Card sx={{ p: { xs: 2, sm: 3 }, mt: 1.5 }}>
             <Stack spacing={1.25} component="form" onSubmit={async event => {
               event.preventDefault()
               if (presenceDraft || !options.some(child => child.id === substitute)) return
