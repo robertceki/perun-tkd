@@ -23,6 +23,7 @@ test('settings keeps core forms and reuses the existing sibling contact', async 
   await button(/Dodaj dete/i).click()
   await label('Ime deteta').fill('Lana')
   await label('Prezime deteta').fill('Test')
+  await label('Registarski broj').fill('  0009/L  ')
   await label('Datum rođenja').fill('2016-01-01')
   await label('Pol').selectOption('F')
   await label('Tip člana').selectOption('recreational')
@@ -32,6 +33,7 @@ test('settings keeps core forms and reuses the existing sibling contact', async 
   await label(/Odnos kontakta 1/).fill('majka')
   await button('Sačuvaj').click()
   await expect(button('Uredi dete Lana Test')).toBeVisible()
+  expect(calls.find(call => call.name === 'save_child')?.args.p_child).toMatchObject({ registration_number: '0009/L' })
   expect(calls.find(call => call.name === 'save_child')?.args.p_contacts).toEqual([
     expect.objectContaining({ contact_id: fixtureIds.parent, is_primary: true }),
   ])
@@ -61,6 +63,7 @@ test('child notes preserve multiple lines after reload and can be cleared', asyn
   await button('Dodaj dete').click()
   await label('Ime deteta').fill('Lana')
   await label('Prezime deteta').fill('Test')
+  await label('Registarski broj').fill('  0009/L  ')
   await label('Datum rođenja').fill('2016-01-01')
   await label('Pol').selectOption('F')
   await label('Tip člana').selectOption('recreational')

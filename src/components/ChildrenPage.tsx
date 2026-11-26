@@ -33,8 +33,9 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
   const ready = data.groups.some(g => g.active && g.kind === 'main') && data.contacts.length > 0
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!draft) return
-    const value = { ...draft, first_name: draft.first_name.trim(), last_name: draft.last_name.trim(), address: draft.address.trim(), belt: draft.belt.trim(), notes: draft.notes?.trim() ? draft.notes : null }
+    const value = { ...draft, registration_number: draft.registration_number?.trim() ?? '', first_name: draft.first_name.trim(), last_name: draft.last_name.trim(), address: draft.address.trim(), belt: draft.belt.trim(), notes: draft.notes?.trim() ? draft.notes : null }
     const invalid = validateChild(value, links, data, today)
+    if (!value.registration_number) invalid.push('Unesite registarski broj deteta.')
     if (!today && value.medical_exam_date === previous?.medical_exam_date) delete value.medical_exam_date
     const medicalExamError = validateMedicalExamDate(value.medical_exam_date, today)
     if (medicalExamError) invalid.push(medicalExamError)
@@ -48,6 +49,8 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
     <SettingsDetail busy={club.busy} backLabel="Nazad na spisak dece" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi dete' : 'Novo dete'}</Typography><Feedback errors={errors} /><form onSubmit={submit} className={draft.member_type === 'competitor' ? 'competitor-form' : undefined}><fieldset disabled={club.busy}>
       {draft.member_type === 'competitor' && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Polja označena zvezdicom (*) su obavezna. Potreban je jedan glavni kontakt.</Alert>}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Ime deteta" autoComplete="given-name" required value={draft.first_name} onChange={e => setDraft({ ...draft, first_name: e.target.value })} /><Field label="Prezime deteta" autoComplete="family-name" required value={draft.last_name} onChange={e => setDraft({ ...draft, last_name: e.target.value })} /></Box>
+      <Field label="Registarski broj" type="text" required value={draft.registration_number ?? ''}
+        onChange={e => setDraft({ ...draft, registration_number: e.target.value })} />
       <CompetitorProfile child={draft} previous={previous} data={data} today={today} change={setDraft} openSchedule={openSchedule ?? (() => navigate('Termini'))} />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Box sx={{ flex: 1, minWidth: 0, '& > *': { mb: 0 } }}>

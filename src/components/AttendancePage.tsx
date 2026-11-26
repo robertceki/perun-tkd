@@ -1,5 +1,6 @@
 import { PendingStatus } from './Feedback'
 import { allowsCompetitionEnrollment } from '../domain/competitorProfile'
+import { groupRoster, plannedRoster } from '../domain/attendanceRoster'
 import { useEffect, useRef, useState } from 'react'
 import { getMedicalExamDetails } from '../domain/medicalExam'
 import { MedicalExamStatus } from './MedicalExamStatus'
@@ -30,7 +31,8 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
   const [substitute, setSubstitute] = useState('')
   const [substituteOpen, setSubstituteOpen] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
-  const [attempted, setAttempted] = useState(false)
+  const [restoreCancellation, setRestoreCancellation] = useState<string | null>(null)
+  const [attempted, setAttempted] = useState('')
   const [checking, setChecking] = useState(false)
   const [failure, setFailure] = useState('')
   const session = term.session
@@ -45,22 +47,24 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
   const present = rows.filter(row => row.present).length
   const sessionGroup = data.groups.find(group => group.id === session?.group_id)
   const options = data.children.filter(child => child.status === 'active' && allowsCompetitionEnrollment(child, sessionGroup) && !rows.some(row => row.child_id === child.id))
-  const preview = !session && !canStart ? data.children.filter(child => data.assignments.some(entry =>
-    entry.term_id === term.termId && entry.child_id === child.id && entry.valid_from <= term.date &&
-    (!entry.valid_to || entry.valid_to >= term.date) &&
-    (!entry.cancelled_at || Date.parse(entry.cancelled_at) > term.startsAt))) : []
+  const preview = !session && !canStart ? plannedRoster(data, term, today) : []
+  const missingMemberIds = session && serverInstant !== undefined && serverInstant < term.startsAt &&
+    !session.completed_at && !session.cancelled_at
+    ? groupRoster(data, session.group_id).filter(child => !rows.some(row => row.child_id === child.id)).map(child => child.id).sort().join(',')
+    : ''
+  const rosterRequest = !session ? 'new' : missingMemberIds
   const { busy, ensureSession } = club
 
   useEffect(() => {
-    if (!canStart || session || attempted || busy) return
-    setAttempted(true)
+    if (!canStart || !rosterRequest || attempted === rosterRequest || busy) return
+    setAttempted(rosterRequest)
     void ensureSession(term.date, term.termId, async () => {
       const verified = await verifyBoundary(opening)
       if (verified === null) throw new Error('Serversko vreme nije dostupno.')
       if (!verified) throw new Error('Prozivka još nije otvorena.')
       return true
     })
-  }, [attempted, busy, canStart, ensureSession, opening, session, term.date, term.termId, verifyBoundary])
+  }, [attempted, busy, canStart, ensureSession, opening, rosterRequest, term.date, term.termId, verifyBoundary])
 
   async function change(write: () => Promise<void>, cancel = false) {
     if (checking || busy || !canStart || !session || session.cancelled_at) return
@@ -95,16 +99,36 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     {failure && <Alert variant="outlined" severity="error" sx={{ mb: 1.5 }}>{failure}</Alert>}
     {serverInstant !== undefined && serverInstant < opening && !session?.cancelled_at &&
       <Alert variant="outlined" severity="info" role="status" sx={{ mb: 1.5 }}>Prozivka se otvara u <strong>{openingTime.format(opening)}</strong> ({openingDate.format(opening)}).</Alert>}
-    {!session && canStart && <div>
-      {club.saving || club.loading ? <PendingStatus>Učitavanje spiska treninga…</PendingStatus> : attempted &&
-        <Button type="button" variant="outlined" color="secondary" disabled={busy} onClick={() => setAttempted(false)}>Ponovo otvori trening</Button>}
+    {rosterRequest && canStart && <div>
+      {club.saving || club.loading ? <PendingStatus>Učitavanje spiska treninga…</PendingStatus> : attempted === rosterRequest &&
+        <Button type="button" variant="outlined" color="secondary" disabled={busy} onClick={() => setAttempted('')}>{session ? 'Ponovo učitaj spisak' : 'Ponovo otvori trening'}</Button>}
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
       <Typography component="h2" variant="h6">Planirani spisak</Typography>
-      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <Alert variant="outlined" severity="info" role="status">Nema planiranih upisa.</Alert>}
+      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <Alert variant="outlined" severity="info" role="status">Nema dece na planiranom spisku.</Alert>}
     </section>}
     {session && <>
-      {session.cancelled_at && <Alert variant="outlined" severity="error" role="status" sx={{ mb: 1.5 }}>Trening je otkazan. Spisak je dostupan samo za pregled.</Alert>}
+      {session.cancelled_at && <>
+        <Alert variant="outlined" severity="error" role="status" sx={{ mb: 1.5 }}>Trening je otkazan. Spisak je dostupan samo za pregled.</Alert>
+        <Button variant="outlined" disabled={authBusy || busy || checking} sx={{ mb: 1.5 }}
+          onClick={() => setRestoreCancellation(session.cancelled_at)}>Vrati trening</Button>
+        <Dialog open={restoreCancellation !== null} onClose={() => { if (!club.saving) setRestoreCancellation(null) }}
+          fullWidth maxWidth="xs" aria-labelledby="restore-training-title" aria-describedby="restore-training-description">
+          <DialogTitle id="restore-training-title">Vrati otkazani trening?</DialogTitle>
+          <DialogContent>
+            <Typography id="restore-training-description">Trening će ponovo biti dostupan za prozivku. Zabeleženo prisustvo i status završetka ostaju sačuvani.</Typography>
+            {club.error && <Alert severity="error" sx={{ mt: 1.5 }}>{club.error}</Alert>}
+          </DialogContent>
+          <DialogActions>
+            <Button color="secondary" autoFocus disabled={club.saving} onClick={() => setRestoreCancellation(null)}>Nazad</Button>
+            <Button variant="contained" disabled={authBusy || busy || checking} onClick={async () => {
+              if (!restoreCancellation) return
+              const result = await club.save(() => repository!.restoreSession(session.id, restoreCancellation))
+              if (result !== 'failed') setRestoreCancellation(null)
+            }}>Vrati trening</Button>
+          </DialogActions>
+        </Dialog>
+      </>}
       {session.completed_at && !session.cancelled_at && <Alert variant="outlined" severity="success" role="status" sx={{ mb: 1.5 }}>Prozivka je završena.</Alert>}
       <Chip label={present + ' od ' + rows.length + ' prisutnih'} sx={{ bgcolor: '#eee3c9', fontWeight: 800, mb: 1.5 }} />
       <fieldset disabled={checking || busy || !canStart || !!session.cancelled_at}>

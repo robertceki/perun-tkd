@@ -15,6 +15,7 @@ export const fixtureIds = {
   other: '10000000-0000-4000-8000-000000000008',
   trainer: '10000000-0000-4000-8000-000000000009',
   user: '10000000-0000-4000-8000-000000000010',
+  otherGroup: '10000000-0000-4000-8000-000000000011',
 }
 
 export function sessionId(termId: string, date: string) {
@@ -37,17 +38,21 @@ const belgrade = new Intl.DateTimeFormat('sv-SE', {
 export const test = base.extend<{
   calls: Call[]
   initialTime: string
+  seedOpenRoster: boolean
+  substituteOutsideGroup: boolean
   anaMedicalExamDate: string | null
   boundaryTerm: { time: string; weekday: number } | null
   serverClock: { instant: string }
 }>({
   initialTime: [now, { option: true }],
+  seedOpenRoster: [false, { option: true }],
+  substituteOutsideGroup: [false, { option: true }],
   anaMedicalExamDate: [null, { option: true }],
   boundaryTerm: [null, { option: true }],
   serverClock: async ({ initialTime }, use) => { await use({ instant: initialTime }) },
   serviceWorkers: 'block',
   timezoneId: 'Pacific/Honolulu',
-  calls: async ({ page, context, baseURL, initialTime, anaMedicalExamDate, boundaryTerm, serverClock }, use) => {
+  calls: async ({ page, context, baseURL, initialTime, anaMedicalExamDate, boundaryTerm, serverClock, seedOpenRoster, substituteOutsideGroup }, use) => {
     const calls: Call[] = []
     const unexpected: string[] = []
     const sessions: TrainingSession[] = []
@@ -55,12 +60,12 @@ export const test = base.extend<{
     const terms = [term(fixtureIds.future, '20:00:00'), term(fixtureIds.started, '18:00:00'), term(fixtureIds.early, '17:00:00'), term(fixtureIds.other, '16:00:00', 2)]
     if (boundaryTerm) terms[1] = term(fixtureIds.started, boundaryTerm.time, boundaryTerm.weekday)
     const children: Child[] = [
-      { ...child(fixtureIds.ana, 'Ana'), medical_exam_date: anaMedicalExamDate },
-      { ...child(fixtureIds.iva, 'Iva'), medical_exam_date: null },
+      { ...child(fixtureIds.ana, 'Ana'), registration_number: '0007/A', medical_exam_date: anaMedicalExamDate },
+      { ...child(fixtureIds.iva, 'Iva'), registration_number: '0008/A', main_group_id: substituteOutsideGroup ? fixtureIds.otherGroup : fixtureIds.group, medical_exam_date: null },
     ]
     const links = [{ child_id: fixtureIds.ana, contact_id: fixtureIds.parent, relationship: 'majka', is_primary: true }]
     const assignments = [{ term_id: fixtureIds.started, child_id: fixtureIds.ana, valid_from: '2026-01-01', valid_to: null, cancelled_at: null as string | null }]
-    const groups = [{ id: fixtureIds.group, name: 'Pioniri', kind: 'main', active: true }]
+    const groups = [{ id: fixtureIds.group, name: 'Pioniri', kind: 'main', active: true }, { id: fixtureIds.otherGroup, name: 'Druga grupa', kind: 'main', active: true }]
     const contacts = [{ id: fixtureIds.parent, first_name: 'Mira', last_name: 'Test', phone: '000', email: null, address: null }]
     const weightCategories: WeightCategory[] = [
       { id: 'older_pioneers:F:-27', age_category: 'older_pioneers', sex: 'F', signed_kg: -27, sort_order: 1 },
@@ -78,7 +83,23 @@ export const test = base.extend<{
       const person = children.find(row => row.id === childId)
       if (person && !attendance.some(row => row.session_id === id && row.child_id === childId)) {
         attendance.push({ ...actor, session_id: id, child_id: childId, child_first_name: person.first_name,
-          child_last_name: person.last_name, present: false, is_substitute: substitute })
+          child_last_name: person.last_name, child_registration_number: person.registration_number, present: false, is_substitute: substitute })
+      }
+    }
+    if (seedOpenRoster) {
+      const schedule = terms[0]
+      const id = sessionId(schedule.id, today)
+      sessions.push({ ...actor, id, term_id: schedule.id, session_date: today, group_id: schedule.group_id,
+        group_name: 'Pioniri', starts_at: schedule.starts_at, ends_at: schedule.ends_at,
+        starts_at_utc: '2026-07-06T18:00:00Z', completed_at: null, cancelled_at: null })
+      add(id, fixtureIds.iva, true)
+      attendance[0].present = true
+    }
+    function addGroupMembers(row: TrainingSession) {
+      for (const person of children) {
+        if (person.status === 'active' && (person.main_group_id === row.group_id || person.competition_group_id === row.group_id)) {
+          add(row.id, person.id, false)
+        }
       }
     }
     function upsert<T extends { id: string }>(rows: T[], value: T) {
@@ -134,7 +155,10 @@ export const test = base.extend<{
         if (start === undefined) return reply({ message: 'Datum nije u rasporedu termina.' }, 400)
         const id = sessionId(schedule.id, date)
         const existing = sessions.find(row => row.id === id)
-        if (existing) return reply(existing)
+        if (existing) {
+          if (instant < start && !existing.completed_at && !existing.cancelled_at) addGroupMembers(existing)
+          return reply(existing)
+        }
         if (instant < start - 3_600_000) return reply({ message: openingError }, 400)
         const row = { ...actor, id, term_id: schedule.id, session_date: date, group_id: schedule.group_id,
           group_name: groups.find(group => group.id === schedule.group_id)!.name, starts_at: schedule.starts_at,
@@ -143,6 +167,7 @@ export const test = base.extend<{
         for (const entry of assignments) {
           if (entry.term_id === row.term_id && entry.valid_from <= date && (!entry.cancelled_at || entry.cancelled_at > row.starts_at_utc)) add(id, entry.child_id, false)
         }
+        if (date >= belgrade.format(instant).slice(0, 10)) addGroupMembers(row)
         return reply(row)
       }
       if (name === 'save_child') {
@@ -161,6 +186,12 @@ export const test = base.extend<{
         const entry = assignments.find(row => row.term_id === args.p_term_id && row.child_id === args.p_child_id && row.valid_from === args.p_valid_from)
         if (!entry) return reply({ message: 'Upis ne postoji.' }, 400)
         entry.cancelled_at ??= now
+        return reply(null)
+      }
+      if (name === 'restore_session') {
+        const row = sessions.find(value => value.id === args.p_session_id)
+        if (!row || (row.cancelled_at && row.cancelled_at !== args.p_cancelled_at)) return reply({ message: 'Status treninga se promenio.' }, 400)
+        row.cancelled_at = null
         return reply(null)
       }
       if (['set_presence', 'add_substitute', 'complete_session', 'cancel_session'].includes(name)) {

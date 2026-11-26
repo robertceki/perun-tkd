@@ -43,6 +43,9 @@ export function createClubRepository(client: SupabaseClient) {
     },
     async completeSession(sessionId: string): Promise<void> { await rpc('complete_session', { p_session_id: sessionId }) },
     async cancelSession(sessionId: string): Promise<void> { await rpc('cancel_session', { p_session_id: sessionId }) },
+    async restoreSession(sessionId: string, cancelledAt: string): Promise<void> {
+      await rpc('restore_session', { p_session_id: sessionId, p_cancelled_at: cancelledAt })
+    },
     async cancelEnrollment(termId: string, childId: string, validFrom: string): Promise<void> {
       await rpc('cancel_enrollment', { p_term_id: termId, p_child_id: childId, p_valid_from: validFrom })
     },

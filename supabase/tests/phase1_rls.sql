@@ -50,7 +50,17 @@ begin
   child_data := jsonb_build_object('id',kid_id,'first_name','R1','last_name','Child','birth_date','2015-01-01',
     'status','active','main_group_id',group_id,'address','','belt','','sex','F','member_type','recreational');
   links := jsonb_build_array(jsonb_build_object('child_id',kid_id,'contact_id',parent_id,'relationship','parent','is_primary',true));
+  begin
+    perform public.save_child(child_data,links);
+    raise exception 'New child without registration number accepted';
+  exception when raise_exception then
+    if sqlerrm <> 'Unesite registarski broj deteta.' then raise; end if;
+  end;
+  child_data := child_data || '{"registration_number":"  0001/A  "}';
   perform public.save_child(child_data,links);
+  if not exists(select 1 from public.children where id=kid_id and registration_number='0001/A') then
+    raise exception 'Registration number lost its string value';
+  end if;
   begin
     perform public.save_child(child_data || '{"first_name":"Should roll back"}', '[]');
     raise exception 'Invalid child aggregate save succeeded';
