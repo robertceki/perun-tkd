@@ -56,7 +56,7 @@ export function createClubRepository(client: SupabaseClient) {
       if (error) throw error
     },
     async deleteTerm(id: string): Promise<void> { await rpc('delete_term', { p_term_id: id }) },
-    async deleteGroup(id: string): Promise<void> { await rpc('delete_unused_group', { p_group_id: id }) },
+    async deleteGroup(id: string): Promise<void> { await rpc('delete_group', { p_group_id: id }) },
     async removeGroupMember(groupId: string, childId: string): Promise<void> {
       await rpc('remove_group_member', { p_group_id: groupId, p_child_id: childId })
     },

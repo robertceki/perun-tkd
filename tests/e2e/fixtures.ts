@@ -185,6 +185,23 @@ export const test = base.extend<{
           row.term_id === entry.term_id && row.child_id === entry.child_id && row.valid_from === entry.valid_from)))
         return reply(null)
       }
+      if (name === 'delete_group') {
+        const index = groups.findIndex(row => row.id === args.p_group_id)
+        if (index < 0) return reply({ message: 'Grupa ne postoji.' }, 400)
+        const termIds = new Set(terms.filter(term => term.group_id === args.p_group_id).map(term => term.id))
+        for (let i = terms.length - 1; i >= 0; i--) {
+          if (termIds.has(terms[i].id)) terms.splice(i, 1)
+        }
+        for (let i = assignments.length - 1; i >= 0; i--) {
+          if (termIds.has(assignments[i].term_id)) assignments.splice(i, 1)
+        }
+        for (const person of children) {
+          if (person.main_group_id === args.p_group_id) person.main_group_id = null
+          if (person.competition_group_id === args.p_group_id) person.competition_group_id = null
+        }
+        groups.splice(index, 1)
+        return reply(null)
+      }
       if (name === 'remove_group_member') {
         const person = children.find(row => row.id === args.p_child_id)
         if (!person) return reply({ message: 'Član ne postoji.' }, 400)

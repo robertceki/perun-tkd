@@ -23,17 +23,29 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
   }
   if (draft) {
     const members = data.children.filter(child => child.main_group_id === draft.id || child.competition_group_id === draft.id)
+    const termCount = data.terms.filter(term => term.group_id === draft.id).length
     return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na spisak grupa" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>Grupa</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}><Field label="Naziv" required value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /><SelectField label="Vrsta" value={draft.kind} disabled={linked} onChange={e => setDraft({ ...draft, kind: e.target.value as Group['kind'] })}><option value="main">Glavna</option><option value="competition">Takmičarska</option></SelectField>{linked && <Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Vrsta je zaključana jer grupa ima povezane podatke.</Alert>}<Check label="Aktivna grupa" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} /><FormActions busy={club.busy} cancel={() => setDraft(null)} /></fieldset></form>
-      {existing && !linked && <Box sx={{ mt: 2 }}>
-        <Button color="error" variant="outlined" disabled={club.busy || linked} onClick={() => setDeleting(true)}>Obriši grupu</Button>
+      {existing && <Box sx={{ mt: 2 }}>
+        <Button color="error" variant="outlined" disabled={club.busy} onClick={() => setDeleting(true)}>Obriši grupu</Button>
       </Box>}
-      <Dialog open={deleting} onClose={() => { if (!club.busy) setDeleting(false) }} aria-labelledby="delete-group-title">
+      <Dialog open={deleting} onClose={() => { if (!club.saving) setDeleting(false) }}
+        aria-labelledby="delete-group-title" aria-describedby="delete-group-description">
         <DialogTitle id="delete-group-title">Obriši grupu „{draft.name}“?</DialogTitle>
-        <DialogContent>Brisanje grupe je trajno.</DialogContent>
+        <DialogContent>
+          <Box id="delete-group-description">
+            <Typography>Brisanje grupe je trajno.</Typography>
+            <Box component="ul" sx={{ pl: 2.5, my: 1.5 }}>
+              <li>Članovi koji će biti uklonjeni iz grupe: {members.length}. Njihovi profili i članstva u drugim grupama ostaju sačuvani.</li>
+              <li>Nedeljni termini koji će biti obrisani iz rasporeda: {termCount}. Njihovi upisi se uklanjaju iz rasporeda.</li>
+            </Box>
+            <Typography>Sačuvani treninzi i prisustvo ostaju u istoriji.</Typography>
+          </Box>
+          {club.error && <Alert severity="error" sx={{ mt: 1.5 }}>{club.error}</Alert>}
+        </DialogContent>
         <DialogActions>
-          <Button disabled={club.busy} onClick={() => setDeleting(false)}>Odustani</Button>
-          <Button color="error" disabled={club.busy || linked} onClick={async () => {
+          <Button autoFocus disabled={club.saving} onClick={() => setDeleting(false)}>Odustani</Button>
+          <Button color="error" disabled={club.busy || !existing} onClick={async () => {
             const result = await club.deleteGroup(draft.id)
             if (result === 'saved' || result === 'refresh-failed') { setDeleting(false); setDraft(null) }
           }}>Obriši</Button>
