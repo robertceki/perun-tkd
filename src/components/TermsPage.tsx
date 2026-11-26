@@ -19,8 +19,7 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
   const previous = data.terms.find(t => t.id === draft?.id)
   const oldRows = data.assignments.filter(a => a.term_id === draft?.id)
   const scheduleLocked = oldRows.length > 0
-  const hasHistory = !!draft && ((data.sessions ?? []).some(session => session.term_id === draft.id) || oldRows.some(row => !!row.cancelled_at || row.valid_from <= today))
-  const canDelete = !!previous && !!today && !hasHistory
+  const canDelete = !!previous
   const ready = data.groups.some(g => g.active) && !!today
   function edit(term: WeeklyTerm) { setDeleteOpen(false); setDraft({ ...term }); setAssignments(data.assignments.filter(a => a.term_id === term.id).map(a => ({ ...a }))); setErrors([]) }
   function changeAssignment(index: number, value: Partial<TermAssignment>) { setAssignments(assignments.map((item, i) => i === index ? { ...item, ...value } : item)) }
@@ -47,12 +46,12 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
 
   if (draft) return <>
     <SettingsDetail busy={club.busy} backLabel="Nazad na raspored termina" onBack={() => setDraft(null)}><Typography component="h2" variant="h6" sx={{ mb: 1.25 }}>{previous ? 'Uredi termin i upise' : 'Novi termin'}</Typography><Feedback errors={errors} /><form onSubmit={submit}><fieldset disabled={club.busy}>
-      {scheduleLocked && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Raspored je zaključan jer postoje upisi. Možete završiti upise ili deaktivirati termin. Za drugi raspored napravite novi termin.</Alert>}
+      {scheduleLocked && <Alert variant="outlined" severity="info" sx={{ mb: 1.5 }}>Grupa, dan i vreme zaključani su jer termin ima sačuvane upise. Za drugi raspored napravite novi termin. Ovaj termin možete deaktivirati ili obrisati. Sačuvani treninzi i prisustvo ostaju u istoriji.</Alert>}
       <SelectField label="Grupa termina" required disabled={scheduleLocked} value={draft.group_id} onChange={e => setDraft({ ...draft, group_id: e.target.value })}><option value="">Izaberite grupu</option>{data.groups.filter(g => g.active || g.id === previous?.group_id).map(g => <option key={g.id} value={g.id}>{g.name} ({g.kind === 'main' ? 'glavna' : 'takmičarska'}){!g.active ? ' — neaktivna' : ''}</option>)}</SelectField>
       <SelectField label="Dan u nedelji" disabled={scheduleLocked} value={draft.weekday} onChange={e => setDraft({ ...draft, weekday: Number(e.target.value) })}>{days.map((day, index) => <option key={day} value={index + 1}>{day}</option>)}</SelectField>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }, columnGap: 1.5 }}><Field label="Početak" type="time" step="60" required disabled={scheduleLocked} value={draft.starts_at.slice(0, 5)} onChange={e => setDraft({ ...draft, starts_at: e.target.value })} /><Field label="Završetak" type="time" step="60" required disabled={scheduleLocked} value={draft.ends_at.slice(0, 5)} onChange={e => setDraft({ ...draft, ends_at: e.target.value })} /></Box>
       <Check label="Aktivan termin" checked={draft.active} onChange={e => setDraft({ ...draft, active: e.target.checked })} />
-      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi članova</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Postojeći upis završite unosom datuma „Upis do“. Upis se ne briše. Novi period istog člana mora početi posle završetka prethodnog. </Alert>
+      <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Upisi članova</Typography>
         {assignments.map((assignment, index) => {
           const old = oldRows.find(a => a.child_id === assignment.child_id && a.valid_from === assignment.valid_from)
           const historical = !!old?.cancelled_at || (!!old?.valid_to && old.valid_to < today)
@@ -89,11 +88,15 @@ export function TermsPage({ data, club, navigate, today }: { data: ClubData; clu
       <Button type="button" color="error" variant="outlined" disabled={club.busy || !canDelete} onClick={() => setDeleteOpen(true)}>Obriši termin</Button>
     </Box>}
     </SettingsDetail>
-    <Dialog open={deleteOpen} onClose={() => { if (!club.busy) setDeleteOpen(false) }} fullWidth maxWidth="xs" aria-labelledby="delete-term-title">
-      <DialogTitle id="delete-term-title">Obriši termin?</DialogTitle>
-      <DialogContent><DialogContentText>Termin će biti trajno obrisan.{oldRows.length > 0 ? ' Obrisaće se i budući upisi članova.' : ''}</DialogContentText></DialogContent>
+    <Dialog open={deleteOpen} onClose={() => { if (!club.saving) setDeleteOpen(false) }} fullWidth maxWidth="xs"
+      aria-labelledby="delete-term-title" aria-describedby="delete-term-description">
+      <DialogTitle id="delete-term-title">Obriši nedeljni termin?</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="delete-term-description">Termin će biti uklonjen iz nedeljnog rasporeda. Sačuvani treninzi i evidencija prisustva ostaju dostupni.</DialogContentText>
+        {club.error && <Alert severity="error" sx={{ mt: 1.5 }}>{club.error}</Alert>}
+      </DialogContent>
       <DialogActions>
-        <Button color="secondary" disabled={club.busy} onClick={() => setDeleteOpen(false)}>Odustani</Button>
+        <Button color="secondary" autoFocus disabled={club.saving} onClick={() => setDeleteOpen(false)}>Odustani</Button>
         <Button color="error" disabled={club.busy || !canDelete} onClick={() => void removeTerm()}>Obriši termin</Button>
       </DialogActions>
     </Dialog>

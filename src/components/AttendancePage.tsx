@@ -49,7 +49,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
   const options = data.children.filter(child => child.status === 'active' && allowsCompetitionEnrollment(child, sessionGroup) && !rows.some(row => row.child_id === child.id))
   const preview = !session && !canStart ? plannedRoster(data, term, today) : []
   const missingMemberIds = session && serverInstant !== undefined && serverInstant < term.startsAt &&
-    !session.completed_at && !session.cancelled_at
+    !session.completed_at && !session.cancelled_at && data.terms.some(schedule => schedule.id === session.term_id)
     ? groupRoster(data, session.group_id).filter(child => !rows.some(row => row.child_id === child.id)).map(child => child.id).sort().join(',')
     : ''
   const rosterRequest = !session ? 'new' : missingMemberIds
