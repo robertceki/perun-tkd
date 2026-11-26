@@ -185,6 +185,17 @@ export const test = base.extend<{
           row.term_id === entry.term_id && row.child_id === entry.child_id && row.valid_from === entry.valid_from)))
         return reply(null)
       }
+      if (name === 'remove_group_member') {
+        const person = children.find(row => row.id === args.p_child_id)
+        if (!person) return reply({ message: 'Član ne postoji.' }, 400)
+        if (person.main_group_id === args.p_group_id) person.main_group_id = null
+        if (person.competition_group_id === args.p_group_id) person.competition_group_id = null
+        const groupTerms = new Set(terms.filter(row => row.group_id === args.p_group_id).map(row => row.id))
+        for (const entry of assignments) {
+          if (groupTerms.has(entry.term_id) && entry.child_id === person.id && !entry.cancelled_at) entry.cancelled_at = now
+        }
+        return reply(null)
+      }
       if (name === 'delete_term') {
         const index = terms.findIndex(row => row.id === args.p_term_id)
         if (index < 0) return reply({ message: 'Termin ne postoji.' }, 400)

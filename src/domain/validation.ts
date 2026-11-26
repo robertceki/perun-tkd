@@ -65,7 +65,8 @@ export function validateChild(child: Child, links: ChildContact[], data: ClubDat
       && (!today || liveCompetitionAssignments(child.id, data, today).length)) errors.push('Najpre završite ili otkažite takmičarske upise u rasporedu i proverite današnji datum.')
   const main = data.groups.find(group => group.id === child.main_group_id && group.kind === 'main')
   const competition = data.groups.find(group => group.id === child.competition_group_id && group.kind === 'competition')
-  if (!main || (!main.active && previous?.main_group_id !== main.id)) errors.push('Izaberite glavnu grupu odgovarajuće vrste.')
+  if (!(child.main_group_id === null && previous?.main_group_id === null) &&
+      (!main || (!main.active && previous?.main_group_id !== main.id))) errors.push('Izaberite glavnu grupu odgovarajuće vrste.')
   if (child.competition_group_id !== null && (!competition || (!competition.active && previous?.competition_group_id !== competition.id))) errors.push('Izaberite takmičarsku grupu odgovarajuće vrste.')
   if (links.filter(link => link.is_primary).length !== 1) errors.push('Član mora imati tačno jedan glavni kontakt.')
   if (new Set(links.map(link => link.contact_id)).size !== links.length) errors.push('Kontakt je dodat više puta.')

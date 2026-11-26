@@ -157,7 +157,10 @@ begin
     if sqlerrm <> 'Upis u takmičarski termin zahteva takmičara.' then raise; end if;
   end;
   update public.term_assignments set valid_to=today-1 where term_id=term and child_id=kid;
-  perform public.save_child(jsonb_build_object('id',kid,'competition_group_id',null),links);
+  perform public.remove_group_member(competition,kid);
+  if not exists(select 1 from public.children where id=kid and main_group_id=main and competition_group_id is null) then
+    raise exception 'Removing the competition group did not preserve the main group';
+  end if;
   if not exists(select 1 from public.term_assignments where term_id=term and child_id=kid and valid_to=today-1)
      or not exists(select 1 from public.session_attendance a join public.training_sessions s on s.id=a.session_id
        where s.term_id=term and s.session_date=starts and a.child_id=kid and not a.is_substitute) then

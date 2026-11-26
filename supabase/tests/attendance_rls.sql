@@ -295,7 +295,23 @@ begin
   exception when raise_exception then
     if sqlerrm <> 'Najpre završite postojeće upise deteta.' then raise; end if;
   end;
-  perform public.cancel_enrollment(term,kid,future);
+  perform public.remove_group_member(grp,kid);
+  perform public.remove_group_member(grp,kid);
+  if not exists(select 1 from public.children where id=kid and main_group_id is null and status='active') then
+    raise exception 'Removing the member changed the profile status or kept its group';
+  end if;
+  begin
+    perform public.remove_group_member(null,kid);
+    raise exception 'Null group accepted';
+  exception when raise_exception then
+    if sqlerrm <> 'Grupa ne postoji.' then raise; end if;
+  end;
+  begin
+    insert into public.term_assignments(term_id,child_id,valid_from) values (term,kid,future+1);
+    raise exception 'Member without a group could enroll';
+  exception when raise_exception then
+    if sqlerrm <> 'Dete nije podobno za ovaj termin.' then raise; end if;
+  end;
   update public.children set status='inactive', main_group_id=other_grp where id=kid;
   if not exists(select 1 from public.term_assignments where term_id=term and child_id=kid and valid_from=future and valid_to is null and cancelled_at between first_call and clock_timestamp())
      or not exists(select 1 from public.term_assignments where term_id=term and child_id=kid and valid_from=past and valid_to=past)
@@ -370,6 +386,12 @@ begin
      or exists(select 1 from public.session_attendance where session_id in (sid,window_id)) then
     raise exception 'Nontrainer can see seeded session or roster';
   end if;
+  begin
+    perform public.remove_group_member(gen_random_uuid(),gen_random_uuid());
+    raise exception 'Nontrainer removed a member';
+  exception when sqlstate 'P0001' then
+    if sqlerrm <> 'Pristup je dozvoljen samo aktivnim trenerima.' then raise; end if;
+  end;
   begin
     update public.session_attendance set present=false where session_id=window_id;
     raise exception 'Nontrainer UPDATE succeeded';

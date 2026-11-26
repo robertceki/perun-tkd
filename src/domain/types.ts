@@ -7,7 +7,7 @@ export type CompetitionClassId = 'A' | 'B'
 export type AgeCategory = 'rev_pioneers' | 'younger_pioneers' | 'older_pioneers' | 'cadets' | 'juniors' | 'seniors'
 export interface CompetitionClass { id: CompetitionClassId }
 export interface WeightCategory { id: string; age_category: AgeCategory; sex: Sex; signed_kg: number; sort_order: number }
-export interface Child { id: string; registration_number?: string | null; first_name: string; last_name: string; birth_date: string; address: string; belt: string; status: 'active' | 'inactive'; main_group_id: string; competition_group_id: string | null; notes?: string | null; medical_exam_date?: string | null; sex?: Sex | null; member_type?: MemberType; competition_class?: CompetitionClassId | null; weight_category_id?: string | null }
+export interface Child { id: string; registration_number?: string | null; first_name: string; last_name: string; birth_date: string; address: string; belt: string; status: 'active' | 'inactive'; main_group_id: string | null; competition_group_id: string | null; notes?: string | null; medical_exam_date?: string | null; sex?: Sex | null; member_type?: MemberType; competition_class?: CompetitionClassId | null; weight_category_id?: string | null }
 export interface ChildContact { child_id: string; contact_id: string; relationship: string; is_primary: boolean }
 export interface WeeklyTerm { id: string; group_id: string; weekday: number; starts_at: string; ends_at: string; trainer_id: string; active: boolean; created_by?: string | null; updated_by?: string | null; created_at?: string | null; updated_at?: string | null }
 export interface TermAssignment { term_id: string; child_id: string; valid_from: string; valid_to: string | null; cancelled_at?: string | null }

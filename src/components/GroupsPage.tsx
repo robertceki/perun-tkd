@@ -1,8 +1,9 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Alert, Typography, Box, Button } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Alert, Typography, Box, Button, IconButton } from '@mui/material'
+import Close from '@mui/icons-material/Close'
 import { SettingsDetail } from './SettingsDetail'
 import { DirectoryCard } from './DirectoryCard'
 import { useState, type FormEvent } from 'react'
-import type { ClubData, Group } from '../domain/types'
+import type { Child, ClubData, Group } from '../domain/types'
 import { validateGroup } from '../domain/validation'
 import type { ClubController } from '../hooks/useClubData'
 import { Check, Feedback, Field, FormActions, SelectField } from './Feedback'
@@ -10,6 +11,7 @@ import { Check, Feedback, Field, FormActions, SelectField } from './Feedback'
 export function GroupsPage({ data, club }: { data: ClubData; club: ClubController }) {
   const [draft, setDraft] = useState<Group | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [removing, setRemoving] = useState<Child | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const edit = (value: Group) => { setDraft({ ...value }); setErrors([]) }
   const linked = !!draft && (data.children.some(c => c.main_group_id === draft.id || c.competition_group_id === draft.id) || data.terms.some(t => t.group_id === draft.id) || (data.sessions ?? []).some(session => session.group_id === draft.id))
@@ -39,8 +41,33 @@ export function GroupsPage({ data, club }: { data: ClubData; club: ClubControlle
       </Dialog>
       {members.length > 0 && <Box component="section" sx={{ mt: 1.5 }}>
         <Typography component="h3" variant="subtitle1">Članovi ({members.length}, aktivni: {members.filter(child => child.status === 'active').length})</Typography>
-        <ul>{members.map(child => <li key={child.id}>{child.first_name} {child.last_name}{child.status === 'inactive' ? ' — neaktivan' : ''}</li>)}</ul>
+        <Box component="ul" aria-label="Članovi grupe" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+          {members.map(child => <Box component="li" key={child.id}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, minHeight: 44 }}>
+            <span>{child.first_name} {child.last_name}{child.status === 'inactive' ? ' — neaktivan' : ''}</span>
+            <IconButton color="error" aria-label={`Ukloni člana ${child.first_name} ${child.last_name} iz grupe`}
+              sx={{ minWidth: 44, minHeight: 44 }} disabled={club.busy} onClick={() => setRemoving(child)}><Close /></IconButton>
+          </Box>)}
+        </Box>
       </Box>}
+      <Dialog open={removing !== null} onClose={() => { if (!club.saving) setRemoving(null) }}
+        aria-labelledby="remove-group-member-title" aria-describedby="remove-group-member-description">
+        <DialogTitle id="remove-group-member-title">Ukloni člana iz grupe?</DialogTitle>
+        <DialogContent>
+          <Typography id="remove-group-member-description">
+            {removing?.first_name} {removing?.last_name} biće uklonjen iz grupe „{draft.name}“. Aktivni upisi za termine ove grupe biće otkazani. Profil člana i sačuvano prisustvo ostaju dostupni.
+          </Typography>
+          {club.error && <Alert severity="error" sx={{ mt: 1.5 }}>{club.error}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus disabled={club.saving} onClick={() => setRemoving(null)}>Odustani</Button>
+          <Button color="error" disabled={club.busy} onClick={async () => {
+            if (!removing) return
+            const result = await club.removeGroupMember(draft.id, removing.id)
+            if (result !== 'failed') setRemoving(null)
+          }}>Ukloni iz grupe</Button>
+        </DialogActions>
+      </Dialog>
     </SettingsDetail>
   </>
   }

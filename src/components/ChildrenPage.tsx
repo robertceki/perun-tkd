@@ -71,7 +71,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
         <TextField label="Napomene" id="child-notes" multiline minRows={2} value={draft.notes ?? ''} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
       </Box>
       <SelectField label="Status člana" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Child['status'] })}><option value="active">Aktivan</option><option value="inactive">Neaktivan</option></SelectField>
-      <SelectField label="Glavna grupa" required value={draft.main_group_id} onChange={e => setDraft({ ...draft, main_group_id: e.target.value })}><option value="">Izaberite glavnu grupu</option>{data.groups.filter(g => g.kind === 'main' && (g.active || g.id === previous?.main_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>
+      <SelectField label="Glavna grupa" required={previous?.main_group_id !== null} value={draft.main_group_id ?? ''} onChange={e => setDraft({ ...draft, main_group_id: e.target.value || null })}><option value="">{previous?.main_group_id === null ? 'Bez glavne grupe' : 'Izaberite glavnu grupu'}</option>{data.groups.filter(g => g.kind === 'main' && (g.active || g.id === previous?.main_group_id)).map(g => <option key={g.id} value={g.id}>{g.name}{!g.active ? ' (neaktivna)' : ''}</option>)}</SelectField>
       <Box component="fieldset" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5, mb: 1.5 }}><Typography component="legend" variant="subtitle1">Kontakti člana</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Izaberite postojeće kontakte, odnos i tačno jedan glavni kontakt.</Alert>
         {links.map((link, index) => <Box key={index} sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1.5, pb: 1.5 }}>
           <SelectField label={`Kontakt ${index + 1}`} required value={link.contact_id} onChange={e => setLinks(links.map((item, i) => i === index ? { ...item, contact_id: e.target.value } : item))}><option value="">Izaberite kontakt</option>{data.contacts.filter(c => c.id === link.contact_id || !links.some(item => item.contact_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name} — {c.phone}</option>)}</SelectField>
@@ -120,7 +120,7 @@ export function ChildrenPage({ data, club, navigate, today, openSchedule }: { da
             onClick={() => edit(child)} label={`Uredi člana ${child.first_name} ${child.last_name}`}>
             <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
               <strong>{child.first_name} {child.last_name}</strong>
-              <small>{data.groups.find(group => group.id === child.main_group_id)?.name}</small></Box>
+              <small>{data.groups.find(group => group.id === child.main_group_id)?.name ?? 'Bez glavne grupe'}</small></Box>
             <MedicalExamStatus details={medicalExam} warningsOnly />
             {child.status === 'inactive' && <Typography component="span" sx={{ color: 'error.main', fontWeight: 700, fontSize: '1.25rem' }} role="img" aria-label="Neaktivan član" title="Neaktivan član">!</Typography>}
           </DirectoryCard>
