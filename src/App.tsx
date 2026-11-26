@@ -128,7 +128,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   trainerKey: string; trainer: string; logout: () => void; authBusy: boolean; authError: string
 }) {
   const [page, setPage] = useState<Page>('Početna')
-  const [tab, setTab] = useState<SettingsTab>('Deca')
+  const [tab, setTab] = useState<SettingsTab>('Članovi')
   const [date, setDate] = useState('')
   const [week, setWeek] = useState(false)
   const [selected, setSelected] = useState<DatedTerm | null>(null)
@@ -153,7 +153,7 @@ function AuthorizedApp({ trainerKey, trainer, logout, authBusy, authError }: {
   }
 
   function navigate(next: Page) {
-    if (next === 'Deca' || next === 'Kontakti' || next === 'Grupe') {
+    if (next === 'Članovi' || next === 'Kontakti' || next === 'Grupe') {
       setTab(next)
       setPage('Podešavanja')
     } else setPage(next)

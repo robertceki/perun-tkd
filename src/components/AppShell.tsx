@@ -4,7 +4,7 @@ import Home from '@mui/icons-material/HomeOutlined'
 import Calendar from '@mui/icons-material/CalendarMonthOutlined'
 import Settings from '@mui/icons-material/TuneOutlined'
 
-export type Page = 'Početna' | 'Termini' | 'Podešavanja' | 'Deca' | 'Kontakti' | 'Grupe'
+export type Page = 'Početna' | 'Termini' | 'Podešavanja' | 'Članovi' | 'Kontakti' | 'Grupe'
 const pages = [
   { label: 'Početna', icon: <Home /> },
   { label: 'Termini', icon: <Calendar /> },

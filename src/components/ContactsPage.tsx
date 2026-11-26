@@ -30,7 +30,7 @@ export function ContactsPage({ data, club }: { data: ClubData; club: ClubControl
     </fieldset></form></SettingsDetail>
   </>
 
-  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Kontakti</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Jedan kontakt možete povezati sa više dece. Za braću i sestre izaberite postojeći kontakt.</Alert>
+  return <><Typography component="h1" variant="h6" sx={{ mb: 1 }}>Kontakti</Typography><Alert variant="outlined" severity="info" role="note" sx={{ mb: 1.5 }}>Jedan kontakt možete povezati sa više članova. Za braću i sestre izaberite postojeći kontakt.</Alert>
     <Button type="button" variant="contained" sx={{ mb: 1.5 }} disabled={club.busy} onClick={() => edit({ id: crypto.randomUUID(), first_name: '', last_name: '', phone: '', email: null, address: null })}>Dodaj kontakt</Button>
     <Field label="Pretraži kontakte po imenu, telefonu ili imejlu" type="search" value={query} onChange={e => setQuery(e.target.value)} />
     {!list.length ? <Alert variant="outlined" severity="info" role="status">Nema kontakata koji odgovaraju pretrazi.</Alert> :
@@ -44,7 +44,7 @@ export function ContactsPage({ data, club }: { data: ClubData; club: ClubControl
               label={`Uredi kontakt ${contact.first_name} ${contact.last_name}`}>
               <Box component="span" sx={{ display: 'block', flex: 1, minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', '& small': { display: 'block', color: 'text.secondary', fontSize: { xs: '.9375rem', sm: '.875rem' } } }}>
                 <strong>{contact.first_name} {contact.last_name}</strong>
-                <small>{children.length ? children.map(child => child.first_name + ' ' + child.last_name).join(', ') : 'Nema povezane dece'}</small></Box>
+                <small>{children.length ? children.map(child => child.first_name + ' ' + child.last_name).join(', ') : 'Nema povezanih članova'}</small></Box>
           </DirectoryCard>
           </li>
         })}</Box>}

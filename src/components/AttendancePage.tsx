@@ -105,7 +105,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
     </div>}
     {!session && !canStart && Number.isFinite(term.startsAt) && <section>
       <Typography component="h2" variant="h6">Planirani spisak</Typography>
-      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <Alert variant="outlined" severity="info" role="status">Nema dece na planiranom spisku.</Alert>}
+      {preview.length ? <ul className="roll-call-list">{preview.map(child => <li key={child.id}><span>{child.first_name} {child.last_name}</span>{examWarning(child.id)}</li>)}</ul> : <Alert variant="outlined" severity="info" role="status">Nema članova na planiranom spisku.</Alert>}
     </section>}
     {session && <>
       {session.cancelled_at && <>
@@ -133,7 +133,7 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
       <Chip label={present + ' od ' + rows.length + ' prisutnih'} sx={{ bgcolor: '#eee3c9', fontWeight: 800, mb: 1.5 }} />
       <fieldset disabled={checking || busy || !canStart || !!session.cancelled_at}>
         <Typography component="legend" variant="h6">Spisak prisustva</Typography>
-        {!rows.length && <Alert variant="outlined" severity="info" role="status">Na spisku nema dece.</Alert>}
+        {!rows.length && <Alert variant="outlined" severity="info" role="status">Na spisku nema članova.</Alert>}
         {!canStart && rows.length > 0 && <ul className="roll-call-list">{rows.map(row => <li key={row.child_id}>
           <span>{row.child_first_name} {row.child_last_name}{row.is_substitute ? ' (zamena)' : ''} · {row.present ? 'Prisutan' : 'Odsutan'}</span>{examWarning(row.child_id)}
         </li>)}</ul>}
@@ -173,9 +173,9 @@ export function AttendancePage({ term, data, club, opening, serverInstant, today
               }
             }}>
               <Typography component="h2" variant="h6" fontWeight={750}>Zamena</Typography>
-              <TextField select label="Dete" value={substitute} onChange={event => setSubstitute(event.target.value)}
+              <TextField select label="Član" value={substitute} onChange={event => setSubstitute(event.target.value)}
                 slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}>
-                <option value="">Izaberite dete</option>
+                <option value="">Izaberite člana</option>
                 {options.map(child => <option key={child.id} value={child.id}>{child.first_name} {child.last_name}</option>)}
               </TextField>
               <Button variant="contained" type="submit" disabled={busy || checking || !!presenceDraft || !options.some(child => child.id === substitute)}>Dodaj</Button>
