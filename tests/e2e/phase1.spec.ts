@@ -248,3 +248,28 @@ test('competitor details persist and the membership filter excludes recreational
   await expect(competitionClass).toHaveValue('B')
   await expect(weight).toHaveValue('cadets:M:-33')
 })
+
+test('removes a member from the group only after confirmation and retains the profile', async ({ page, calls }) => {
+  await login(page)
+  const navigation = page.getByRole('navigation')
+  await navigation.getByRole('button', { name: 'Podešavanja', exact: true }).click()
+  await page.getByRole('button', { name: 'Grupe', exact: true }).click()
+  await page.getByRole('button', { name: 'Uredi grupu Pioniri' }).click()
+  const remove = page.getByRole('button', { name: 'Ukloni člana Ana Test iz grupe' })
+  const dialog = page.getByRole('dialog', { name: 'Ukloni člana iz grupe?' })
+  await remove.click()
+  await dialog.getByRole('button', { name: 'Odustani' }).click()
+  await expect(remove).toBeVisible()
+  expect(calls.filter(call => call.name === 'remove_group_member')).toHaveLength(0)
+  await remove.click()
+  await dialog.getByRole('button', { name: 'Ukloni iz grupe' }).click()
+  await expect(remove).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Ukloni člana Iva Test iz grupe' })).toBeVisible()
+  expect(calls.filter(call => call.name === 'remove_group_member')).toEqual([
+    { name: 'remove_group_member', args: { p_group_id: fixtureIds.group, p_child_id: fixtureIds.ana } },
+  ])
+  await page.getByRole('button', { name: 'Članovi', exact: true }).click()
+  await page.getByRole('button', { name: 'Uredi člana Ana Test' }).click()
+  await expect(page.getByLabel('Glavna grupa', { exact: true })).toHaveValue('')
+  await expect(page.getByLabel('Status člana', { exact: true })).toHaveValue('active')
+})
